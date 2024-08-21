@@ -1,10 +1,6 @@
 {
-    "users":{
-        "user_id_1": {
-            "role" : "Manager",
-            "name" : "Jason",
-            "username" : "jasonchang0603",
-            "password" : "jason0603"
-        }
+    "wenqi@gmail.com": {
+        "email": "wenqi@gmail.com",
+        "password": "2ae5578b018ce78ead9719556fffbcc0"
     }
 }
