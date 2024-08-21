@@ -1,5 +1,4 @@
 import json
-import os
 import hashlib
 
 #banner
@@ -13,44 +12,81 @@ def print_banner():
 
 # Main Menu
 def display_main_menu():
-    print("Welcome to Bakery Management System")
-    print("1. Login. ")
-    print("2. Signup. ")
-    print("3. Exit the program. ")
+    while True:
+        print("Welcome to Bakery Management System")
+        print("1. Login. ")
+        print("2. Signup. ")
+        print("3. Exit the program. ")
+        choice = input("Please select your options.: ")
+
+        if choice == '1':
+            login()
+        elif choice == '2':
+            signup()
+        elif choice == '3':
+            print("The program are going to exit.")
+            exit()
+        else:
+            print("Invalid Choice.")
 
 # Sign Up system
 def signup():
-    email = input("Enter email address: ")
-    pwd = input("Enter password: ")
-    confirmPassword = input("Confirm password: ")
+    print("----------Signup page----------")
+    print("1. Register as Customer")
+    print("2. Register as Staff")
+    print("3. Exit")
+    signupOption = int(input("Please enter your selection (1-3):  "))
 
-    if confirmPassword == pwd:
-        enc = confirmPassword.encode()
-        hash1 = hashlib.md5(enc).hexdigest()
-                # data.txt need to change to ur json file
-        with open("data.txt", "w") as f:
-            f.write(email + "\n")
-            f.write(hash1)
-        f.close()
-        print("You have registered successfully!")
-    else:
-        print("The password doesn't matched. \n")
+
+    if signupOption == 1:
+        email = input("Please fill up your email address: ")
+        pwd = input("Please enter your password that you want to register: ")
+        confirmPwd = input("Confirm password: ")
+
+        if confirmPwd == pwd:
+            enc = pwd.encode()
+            hashed_pwd = hashlib.md5(enc).hexdigest()
+            user_data = {
+                "email": email,
+                "password": hashed_pwd
+            }
+
+            with open("users.json", "r") as file:
+                try:
+                    existing_data = json.load(file)
+                except json.JSONDecodeError:
+                    existing_data = {}
+
+            existing_data[email] = user_data
+
+            with open("users.json", "w") as file:
+                json.dump(existing_data, file, indent = 4)
+            print("You have registered successfully.")
+        else:
+            print("The password doesn't matched. \n")
 
 # Login System
 def login():
     email = input("Please enter your email address: ")
     pwd = input("Please enter your password: ")
 
-    auth = pwd.encode()
-    auth_hash = hashlib.md5(auth).hexdigest()
-    with open("data.txt", "r") as f:
-        stored_email, stored_pwd = f.read().split("\n")
-    f.close()
-
-    if email == stored_email and auth_hash == stored_pwd:
-        print("Login Success!")
-    else:
-        print("Login Failed! \n")
+    try:
+        with open("users.json", "r") as file:
+            user_data = json.load(file)
+        
+        if user_data[email]['password'] == hashlib.md5(pwd.encode()).hexdigest():
+            print("Login successful!")
+        else:
+            print("Invalid email or password.\n" ,"Are you sure that your account is registered before?")
+    except FileNotFoundError:
+            print("Error: 'users.json' file not found.")
+            print("PLEASE CONTACT ADMINSTRATOR IMMEDIATELY")
+            display_main_menu()
+    except json.JSONDecodeError:
+            print("Error: Unable to read user data.")
+            print("PLEASE CONTACT ADMINSTRATOR IMMEDIATELY")
+            display_main_menu()
+    
 
 # load data from json (users)
 
