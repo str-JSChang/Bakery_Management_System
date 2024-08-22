@@ -29,13 +29,52 @@ def display_main_menu():
         else:
             print("Invalid Choice.")
 
+# Manager Login
+# Check Line112 - 2023-08-23
+def ManagerLogin():
+    print("To register as staff, your account must be 'Manager' to register staff account.")
+    manager_username = input("Please enter Manager username: ")
+    manager_password = input("Please enter Manager password: ")
+    confirmManager_password = input("Confirm Manager password: ")
+
+    # confirm manager password
+    if confirmManager_password == manager_password:
+            try:
+                with open("manager_acc.json", "r") as file:
+                    existing_manager_acc = json.load(file)
+
+                if manager_username in existing_manager_acc:
+                    manager_stored_password = existing_manager_acc[manager_username]['manager_password']
+                    hashing_manager_password = hashlib.md5(manager_password.encode()).hexdigest()
+                    if manager_stored_password == hashing_manager_password:
+                        print("Welcome back, Mr.Jason")
+                    else:
+                        print("Invalid password")
+                else:
+                    print("Manager username not found")
+
+            except FileNotFoundError:
+                print("ERROR, NO MANAGER ACCOUNT EXIST IN THE SYSTEM, PLEASE CONTACT SYSTEM ADMINSTRATOR IMMEDIATELY")
+                signup()
+    else:
+        print("Passwords do not match")
+
 # Sign Up system
 def signup():
     print("----------Signup page----------")
     print("1. Register as Customer")
     print("2. Register as Staff")
     print("3. Exit")
-    signupOption = int(input("Please enter your selection (1-3):  "))
+    
+    while True:
+        try:
+            signupOption = int(input("Please enter your selection (1-3):  "))
+            if signupOption in [1, 2, 3]:
+                break
+            else:
+                print("Please enter a valid option between 1 to 3. ")
+        except ValueError:
+            print("Invalid Input. Error occurs, Please enter a number between 1 and 3. ")
 
 
     if signupOption == 1:
@@ -57,6 +96,10 @@ def signup():
                 except json.JSONDecodeError:
                     existing_data = {}
 
+            if email in existing_data:
+                print("An account with this email already exists.\n")
+                return
+
             existing_data[email] = user_data
 
             with open("users.json", "w") as file:
@@ -64,6 +107,14 @@ def signup():
             print("You have registered successfully.")
         else:
             print("The password doesn't matched. \n")
+
+    if signupOption == 2:
+        ManagerLogin()
+        # Do I need to make managerlogin as a function? or no need, just proceduring it as a part of signing up staff?
+
+    if signupOption == 3:
+        exit()
+        
 
 # Login System
 def login():
@@ -110,10 +161,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
