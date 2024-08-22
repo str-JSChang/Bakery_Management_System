@@ -17,17 +17,24 @@ def display_main_menu():
         print("1. Login. ")
         print("2. Signup. ")
         print("3. Exit the program. ")
-        choice = input("Please select your options.: ")
-
-        if choice == '1':
+        while True:
+            try:
+                choice = int(input("Please enter your selection (1-3): "))
+                if choice in [1, 2, 3]:
+                    break
+                else:
+                    print("Please enter a valid option between 1 to 3.")
+            except ValueError:
+                print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 3.")
+        
+        if choice == 1:
             login()
-        elif choice == '2':
+        elif choice == 2:
             signup()
-        elif choice == '3':
-            print("The program are going to exit.")
+        elif choice == 3:
+            print("Exiting program...")
             exit()
-        else:
-            print("Invalid Choice.")
+
 
 # Manager Login
 # Check Line112 - 2023-08-23
@@ -67,12 +74,14 @@ def signup():
     print("3. Exit")
     
     while True:
-            signupOption = (input("Please enter your selection (1-3):  "))
+        try:
+            signupOption = int(input("Please enter your selection (1-3):  "))
             if signupOption in [1, 2, 3]:
                 break
             else:
                 print("Please enter a valid option between 1 to 3. ")
-
+        except ValueError:
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 3. ")
 
 
     if signupOption == 1:
@@ -118,6 +127,7 @@ def signup():
 
 # Login System
 def login():
+    print("--------Login Page--------")
     email = input("Please enter your email address: ")
     pwd = input("Please enter your password: ")
 
