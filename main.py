@@ -90,10 +90,12 @@ def signup():
                 "password": hashed_pwd
             }
 
-            with open("users.json", "r") as file:
-                try:
+            try:
+                with open("users.json", "r") as file:
                     existing_data = json.load(file)
-                except json.JSONDecodeError:
+            except json.JSONDecodeError:
+                    existing_data = {}
+            except FileNotFoundError:
                     existing_data = {}
 
             if email in existing_data:
@@ -124,19 +126,17 @@ def login():
     try:
         with open("users.json", "r") as file:
             user_data = json.load(file)
-        
-        if user_data[email]['password'] == hashlib.md5(pwd.encode()).hexdigest():
-            print("Login successful!")
-        else:
-            print("Invalid email or password.\n" ,"Are you sure that your account is registered before?")
+        try:
+            if user_data[email]['password'] == hashlib.md5(pwd.encode()).hexdigest():
+                print("Login successful!")
+        except KeyError:
+            print("Invalid email or password.\n","Are you sure that your account is registered before?")
     except FileNotFoundError:
             print("Error: 'users.json' file not found.")
             print("PLEASE CONTACT ADMINSTRATOR IMMEDIATELY")
-            display_main_menu()
     except json.JSONDecodeError:
             print("Error: Unable to read user data.")
             print("PLEASE CONTACT ADMINSTRATOR IMMEDIATELY")
-            display_main_menu()
     
 
 # load data from json (users)
@@ -161,3 +161,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
