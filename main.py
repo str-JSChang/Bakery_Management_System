@@ -67,14 +67,12 @@ def signup():
     print("3. Exit")
     
     while True:
-        try:
-            signupOption = int(input("Please enter your selection (1-3):  "))
+            signupOption = (input("Please enter your selection (1-3):  "))
             if signupOption in [1, 2, 3]:
                 break
             else:
                 print("Please enter a valid option between 1 to 3. ")
-        except ValueError:
-            print("Invalid Input. Error occurs, Please enter a number between 1 and 3. ")
+
 
 
     if signupOption == 1:
@@ -129,8 +127,11 @@ def login():
         try:
             if user_data[email]['password'] == hashlib.md5(pwd.encode()).hexdigest():
                 print("Login successful!")
+            else:
+                print("Account exist, but wrong password.")
+        # When no account founded in users.json
         except KeyError:
-            print("Invalid email or password.\n","Are you sure that your account is registered before?")
+            print("Account not found.\n","Please make sure your account is registered or ensure your email and password is correct.")
     except FileNotFoundError:
             print("Error: 'users.json' file not found.")
             print("PLEASE CONTACT ADMINSTRATOR IMMEDIATELY")
