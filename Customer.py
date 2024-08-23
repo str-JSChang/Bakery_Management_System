@@ -105,12 +105,6 @@ def main():
         else:
             print("Invalid choice, please enter again (1-5): ")
 
-
-if __name__ == "__main__":
-    main()
-    #Menu save in txt file, and baker customer refer to the txt file.
-
-
 if __name__ == "__main__":
     main()
     #Menu save in txt file, and baker customer refer to the txt file.
