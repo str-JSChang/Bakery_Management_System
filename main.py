@@ -86,7 +86,7 @@ def signup():
 
     if signupOption == 1:
         email = input("Please fill up your email address: ")
-        pwd = input("Please enter your password that you want to register: ")
+        pwd = input("Please enter your password: ")
         confirmPwd = input("Confirm password: ")
 
         if confirmPwd == pwd:
