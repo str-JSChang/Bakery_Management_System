@@ -5,30 +5,27 @@
 
 #home
 def home():
-    print("--------Baker--------")
-    print("1.Recipe")
-    print("2.Inventory")
-    print("3.Product Record")
-    print("4.Equipment")
-    print("5.Exit")
-
-    option=int(input("Enter your choice (1-5): "))
-
-    if option==1 :
-        recipe()
-
-    if option==2 :
-        inventory()
-    
-    if option==3 :
-        productrecord()
-
-    if option==4 :
-        equipment()
-
-    if option==5 :
-        exit()
-
+    while True:
+        print("--------Baker--------")
+        print("1.Recipe")
+        print("2.Inventory")
+        print("3.Product Record")
+        print("4.Equipment")
+        print("5.Exit")
+        while True:
+                option = input("Enter your choice (1-5): ")
+                if option == 1 :
+                    recipe()
+                elif option == 2 :
+                    inventory()
+                elif option == 3 :
+                    productrecord()
+                elif option == 4 :
+                    equipment()
+                elif option == 5 :
+                    exit()
+                else:
+                    print("Invalid Input, Please enter number only.")
 
 
 #recipe, CRUD by Baker
