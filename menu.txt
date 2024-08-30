@@ -1,0 +1,37 @@
+# Avengers' Bakery Menu
+
+## Cakes
+"Product","Price","Stocks"
+"Tiramisu Cake","RM50","72"
+"Classic Mango","RM43","45"
+"Blueberry Cheesecake","RM55","89"
+"Strawberry Short Cake","RM60","31"
+"Belgium Chocolate Cake","RM50","67"
+"Mix Fruit Cake","RM55","53"
+"Matcha Cake","RM57","28"
+"Red Velvet","RM45","94"
+"Black Forest","RM46","16"
+
+## Breads
+"Product","Price","Stocks"
+"Mexico Bun","RM3.40","82"
+"Hotdog Bun","RM2.50","59"
+"Spicy Hotdog Bun","RM2.80","41"
+"Chocolate Chips Cream Bun","RM3.00","75"
+"Corn Bun","RM2.00","98"
+"Potato Bun","RM4.00","37"
+"Garlic Bread","RM3.20","63"
+"Sandwich Bread","RM5.00","86"
+"Doughnut","RM3.20","50"
+"Mix Berry Wheat Bread","RM4.30","22"
+"Banana Cake","RM6.00","69"
+
+## Snacks
+"Product","Price","Stocks"
+"Cranberry Biscuit","RM5.00","91"
+"Marshmallow Cookies","RM5.00","77"
+"Meringue Cookie","RM3.20","34"
+"Macaron","RM6.00","56"
+"Blueberry Cheese Tart","RM3.00","80"
+"Mousse Cupcake (Strawberry)","RM3.20","43"
+"Mousse Cupcake (Chocolate)","RM3.20","50"
