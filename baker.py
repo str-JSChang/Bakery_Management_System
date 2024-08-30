@@ -5,27 +5,61 @@
 
 #home
 def home():
+    print("--------Baker--------")
+    print("1.Menu")
+    print("2.Recipe")
+    print("3.Inventory")
+    print("4.Product Record")
+    print("5.Equipment")
+    print("6.Exit")
     while True:
-        print("--------Baker--------")
-        print("1.Recipe")
-        print("2.Inventory")
-        print("3.Product Record")
-        print("4.Equipment")
-        print("5.Exit")
-        while True:
-                option = input("Enter your choice (1-5): ")
-                if option == 1 :
-                    recipe()
-                elif option == 2 :
-                    inventory()
-                elif option == 3 :
-                    productrecord()
-                elif option == 4 :
-                    equipment()
-                elif option == 5 :
-                    exit()
-                else:
-                    print("Invalid Input, Please enter number only.")
+        try:
+            option = int(input("Please enter your selection (1-5): "))
+            if option in [1, 2, 3, 4, 5]:
+                break
+            else:
+                print("Please enter a valid option between 1 to 5.")
+        except ValueError:
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 to 5")
+
+    if option == 1:
+        menu()
+    else:
+        pass
+
+def menu():
+    print("------Baker's Menu------")
+    print("What do you want to do?")
+    print("1. Create new product ")
+    print("2. View all products")
+    print("3. Update existing products")
+    print("4. Delete product")
+    print("5. Back")
+    while True:
+        try:
+            choice = int(input("Please enter your selection (1-5): "))
+            if choice in [1, 2, 3, 4, 5]:
+                break
+            else:
+                print("Please enter a valid option between 1 to 5.")
+        except ValueError:
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 to 5")
+
+    if choice == 1:
+        user_input = input('Please enter "Product Name", "Price","Stocks" with double quote (eg:"Tiramisu Cake" , "RM59" , "12"): \n')
+        menu = open('menu.txt','a')
+        menu.write(user_input)
+
+    elif choice == 2:
+        pass
+    elif choice == 3:
+        pass
+    elif choice == 4:
+        pass
+    elif choice == 5:
+        home()
+
+
 
 
 #recipe, CRUD by Baker
