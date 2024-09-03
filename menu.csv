@@ -1,19 +1,10 @@
-# Avengers' Bakery Menu
-
-## Cakes
-"Product","Price","Stocks"
-"Classic Mango","RM43","45"
-"Blueberry Cheesecake","RM55","89"
-"Matcha Cake","RM57","28"
-
-## Breads
-"Product","Price","Stocks"
-"Chocolate Chips Cream Bun","RM3.00","75"
-"Corn Bun","RM2.00","98"
-"Mexico Bun","RM3.40","68"
-
-## Snacks
-"Product","Price","Stocks"
-"Cranberry Biscuit","RM5.00","91"
-"Meringue Cookie","RM3.20","34"
-"Macaron","RM6.00","56"
+ProductName,category,price,stocksAmount
+ Classic Mango ,cake,RM43.00,45
+ Blueberry Cheesecake ,cake,RM55.00,89
+ Matcha Cake ,cake,RM57.00,28
+ Chocolate Chips Cream Bun ,breads,RM3.00,75
+ Corn Bun ,breads,RM2.00,98
+ Mexico Bun ,breads,RM3.40,68
+ Cranberry Biscuit ,snacks,RM5.00,91
+ Meringue Cookie ,snacks,RM3.20,34
+ Macaron ,snacks,RM6.00,56
