@@ -1,9 +1,6 @@
+import pandas as pd
 
-# menu
-# need to access by customer, while baker(me) can update, create, delete and etc.
-
-
-#home
+# Home
 def home():
     print("--------Baker--------")
     print("1.Menu")
@@ -24,9 +21,18 @@ def home():
 
     if option == 1:
         menu()
-    else:
-        pass
+    elif option == 2:
+        recipe()
+    elif option == 3:
+        inventory()
+    elif option == 4:
+        product_record()
+    elif option == 5:
+        equipment()
+    elif option == 6:
+        exit()    
 
+# MENU
 def menu():
     print("------Baker's Menu------")
     print("What do you want to do?")
@@ -35,6 +41,7 @@ def menu():
     print("3. Update existing products")
     print("4. Delete product")
     print("5. Back")
+
     while True:
         try:
             choice = int(input("Please enter your selection (1-5): "))
@@ -46,14 +53,22 @@ def menu():
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 to 5")
 
     if choice == 1:
-        user_input = input('Please enter "Product Name", "Price","Stocks" with double quote (eg:"Tiramisu Cake" , "RM59" , "12"): \n')
-        menu = open('menu.txt','a')
-        menu.write(user_input)
+        menuTable = pd.read_csv("menu.csv")
+        print(menuTable)
+
 
     elif choice == 2:
-        pass
+        view = open('menu.txt','r')
+        print(view.read())
+        
     elif choice == 3:
-        pass
+        view = open('menu.txt','r')
+        print(view.read())
+        print("Which product you want to update?")
+        update_input = input("Enter the number of the product only (EXP: '1.tiramisu cake', enter 1):\n")
+        update = open('menu.txt','w')
+        update.write(update_input)
+
     elif choice == 4:
         pass
     elif choice == 5:
@@ -65,7 +80,8 @@ def menu():
 #recipe, CRUD by Baker
 def recipe():
     print("------Avengers' Bakery Recipe------")
-    print("1.Create")
+    print("1.Add new recipe")
+    print("View recipe")
     print("2.Update")
     print("3.Delete")
     print("4.Return to Home")
@@ -76,6 +92,15 @@ def recipe():
 
 #inventory
 def inventory():
+    print("------Avengers' Bakery Inventory------")
+    print("1.Add on new inventory")
+    print("2.Update")
+    print("3.Check")
+    print("4.Delete inventory")
+    print("5.Return to Home")
+
+    input=("Choose which to operate(1-5):")
+
     list=["fruit", "flour", "egg", "sugar", "vanilla extract"]
     print(list)
     option=input("Which inventory you want to check? : ")
@@ -142,28 +167,18 @@ def inventory():
         vanillaamt()
 
 
-#Product Record
-def productrecord():
-    list=['cake', 'bread', 'snacks']
-    print(list)
-    option=input("Which one you want to choose? :")
-
-    cake="cake"
-    bread="bread"
-    snacks="snacks"
-
-    if option==cake :
-        print("You want to update\n1.Batch Number & Quantities\n\t or \n2.Expiration date?")
-
-    if option==bread :
-        print("You want to update\n1.Batch Number & Quantities\n\t or \n2.Expiration date?")
-
-    if option==snacks :
-        print("You want to update\n1.Batch Number & Quantities\n\t or \n2.Expiration date?")
-
 
 #equipment
 def equipment():
+    print("------Avengers' Bakery Equipment------")
+    print("1.New Equipment")
+    print("2.Check")
+    print("3.Update")
+    print("4.Delete")
+    print("5.Return to Home")
+
+    input=("Choose which to operate(1-5):")
+
     list=["oven", "fridge", "stand mixer"]
     print(list)
     option=input("Which one you want to choose? :")
