@@ -12,7 +12,6 @@ import hashlib
 def hash_password(password):
     return hashlib.md5(password.encode()).hexdigest()
 
-
 def update():
     # Load users.json data
     with open('users.json', 'r') as file:
@@ -21,43 +20,67 @@ def update():
     cus_email = input("Enter your email: ")
     cus_pwd = input("Enter your password: ")
 
-    # Hash the input password for comparison
+    # Compare password
     hashed_pwd = hash_password(cus_pwd)
 
-    # Check customer email exists and the password correct
+    # email and password matching or not
     if cus_email in users and users[cus_email]['password'] == hashed_pwd:
         new_email = input("Enter new email: ")
         new_pwd = input("Enter new password: ")
 
-        # Hash the new password
+        # Hash new password
         new_h_pwd = hash_password(new_pwd)
 
-        # Update user data
-        del users[cus_email]
+        # Update cuz email and pw
+        users.pop(cus_email)
         users[new_email] = {
             "email": new_email,
             "password": new_h_pwd
         }
 
-        # Write the updated users data back to the file
+        # Write the updated users data back to userjson
         with open('users.json', 'w') as file:
             json.dump(users, file, indent=4)
 
         print("Your information was updated successfully.")
     else:
         print("No matching account.")
-        
-def cart():
-    with open('menu.txt','r') as file:
-        lines = file.readlines()
-        for line in lines:
-            food_name, food_description, food_price = line.strip().split(',')
-            print(f"Breads: {food_name}, Description: {food_description}, Price: {food_price}")
 
-def order(user):
+def cart(menu_file):
+    with open(menu_file,'r') as file:
+        lines = file.readlines()
+
+        section = ""
+        items = [] # store items in a list
+
+        for line in lines:
+            line = line.strip()
+            if line.startswith("## "):
+                print(section,items)
+                print("\n")
+                section = line[3:]
+                items = []
+                print("Your Cart: ")
+                print(f"{'Product':<30} {'Price':<10} {'Stocks':<10}") # Showcase of menu
+                print("-"*50)
+                for product,price,stock in items:
+                    print(f"{product:<30} {price:<10}  {stock:<10}")
+        else:
+            print("Your cart is empty.")
+
+
+def update_cart(user_cart):
+    with open(menu_file,'r') as file:
+        lines = file.readlines()
+        print("Menu: ")
+        for i in range(len(user_cart)):
+            food_name, food_description, food_price, food_stock = lines[i].strip().split(',')
+            print(f"{i + 1}. {food_name} - {food_description} - RM{float(food_price):.2f} - Stock: {food_stock}")
+
+def order():
     while True:
         print("________________")
-        print(f"{user[0]}'s, Order.")
+        print(f"Your order.")
         print("________________")
         print("1. View Order")
         print("2. Update Order")
@@ -67,45 +90,44 @@ def order(user):
         if n == "1":
             pass
         elif n == "2":
-            cart()
+            cart(menu_file)
         elif n == "3":
-            break
-
+            main()
+        else:
+            print("Invalid choice, please try again.")
 
 def product_review():
     pass
 
 def main():
-    user = None
 
     while True:
         print("________________________________")
         print("         Customer Page")
         print("________________________________")
-        if user:
-            print(f"***Welcome back, {user[0]}.\N{grinning face}***")
+        print(f"***Welcome back.\N{grinning face}***")
         print("1. Shopping Cart")
         print("2. Order")
         print("3. Product Review")
-        print("4. Exit")
+        print("4. Update Account")
+        print("5. Exit")
 
         n = input("Enter your choice (1-4): ")
         if n == "1":
-            cart()
+            cart(menu_file)
         elif n == "2":
             order()
         elif n == "3":
-            if user:
-                cart(user)
-            else:
-                print("Please login to view more.")
-        elif n == "4":
-            print("See you again.")
+            product_review()
+        elif n =="4":
+            update()
+        elif n == "5":
+            print("Thank you for visiting.")
             break
         else:
             print("Invalid choice, please enter again (1-5): ")
 
+
 if __name__ == "__main__":
     main()
     #Menu save in txt file, and baker customer refer to the txt file.
-
