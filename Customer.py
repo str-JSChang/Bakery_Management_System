@@ -3,7 +3,9 @@
 #Cart management - add, remove, mod items
 #Order Tracking - status of orders
 #Product Review - feedback, suggestions
-menu_file = 'menu.txt'
+menu_file ='menu.csv'
+import pandas as pd
+import csv
 import json
 import hashlib
 
@@ -46,27 +48,20 @@ def update():
     else:
         print("No matching account.")
 
-def cart(menu_file):
-    with open(menu_file,'r') as file:
-        lines = file.readlines()
+def cart():
+    with open(menu_file, 'r') as file:
+        csv_reader = csv.reader(file)
+        title = next(csv_reader)
 
-        section = ""
-        items = [] # store items in a list
-
-        for line in lines:
-            line = line.strip()
-            if line.startswith("## "):
-                print(section,items)
-                print("\n")
-                section = line[3:]
-                items = []
-                print("Your Cart: ")
-                print(f"{'Product':<30} {'Price':<10} {'Stocks':<10}") # Showcase of menu
-                print("-"*50)
-                for product,price,stock in items:
-                    print(f"{product:<30} {price:<10}  {stock:<10}")
-        else:
-            print("Your cart is empty.")
+    print(f"{'ProductName':<30} {'Category':10} {'Price':10} {'Stock':10}")
+    print("-" * 60)
+        
+    # Read and print each row
+    for row in csv_reader:
+        name, category, price, stock = row
+        print(f"{name.strip():<30} {category.strip():10} {price.strip():10} {stock.strip():<10}")
+    
+        print("______________________")
 
 
 def update_cart(user_cart):
@@ -90,7 +85,7 @@ def order():
         if n == "1":
             pass
         elif n == "2":
-            cart(menu_file)
+            update_cart([])
         elif n == "3":
             main()
         else:
@@ -114,7 +109,7 @@ def main():
 
         n = input("Enter your choice (1-4): ")
         if n == "1":
-            cart(menu_file)
+            cart()
         elif n == "2":
             order()
         elif n == "3":
@@ -127,7 +122,5 @@ def main():
         else:
             print("Invalid choice, please enter again (1-5): ")
 
-
-if __name__ == "__main__":
-    main()
+main()
     #Menu save in txt file, and baker customer refer to the txt file.
