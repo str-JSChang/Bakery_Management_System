@@ -52,21 +52,24 @@ def cart():
     with open(menu_file, 'r') as file:
         csv_reader = csv.reader(file)
         title = next(csv_reader)
+        rows = list(csv_reader)
 
-    print(f"{'ProductName':<30} {'Category':10} {'Price':10} {'Stock':10}")
+    print("\t")
+    print(f"{'ProductName':<30} {'Category':10} {'Price':10} {'Stock':15}")
     print("-" * 60)
         
     # Read and print each row
-    for row in csv_reader:
+    for row in rows:
         name, category, price, stock = row
         print(f"{name.strip():<30} {category.strip():10} {price.strip():10} {stock.strip():<10}")
     
-        print("______________________")
+    print("-"*60)
 
 
 def update_cart(user_cart):
     with open(menu_file,'r') as file:
         lines = file.readlines()
+
         print("Menu: ")
         for i in range(len(user_cart)):
             food_name, food_description, food_price, food_stock = lines[i].strip().split(',')
@@ -75,7 +78,7 @@ def update_cart(user_cart):
 def order():
     while True:
         print("________________")
-        print(f"Your order.")
+        print(f"{'Your order.':>5}")
         print("________________")
         print("1. View Order")
         print("2. Update Order")
@@ -97,30 +100,34 @@ def product_review():
 def main():
 
     while True:
-        print("________________________________")
-        print("         Customer Page")
-        print("________________________________")
-        print(f"***Welcome back.\N{grinning face}***")
+        print("_"*50)
+        print(f"{'Customer Page':>30}")
+        print("_"*50)
+        print(f"{'***\N{grinning face} Welcome back to Avengers Bakery !\N{grinning face}***':>20}")
         print("1. Shopping Cart")
         print("2. Order")
         print("3. Product Review")
         print("4. Update Account")
         print("5. Exit")
 
-        n = input("Enter your choice (1-4): ")
-        if n == "1":
-            cart()
-        elif n == "2":
-            order()
-        elif n == "3":
-            product_review()
-        elif n =="4":
-            update()
-        elif n == "5":
-            print("Thank you for visiting.")
-            break
-        else:
+        try:
+            option = int(input("Enter your selection (1-5): "))
+            if option == 1:
+                cart()
+            elif option == 2:
+                order()
+            elif option == 3:
+                product_review()
+            elif option == 4:
+                update()
+            elif option == 5:
+                print("Thank you for visiting.")
+                exit()
+                break
+            else:
+                print("Please enter a valid number between 1 to 5.")
+        except ValueError:
             print("Invalid choice, please enter again (1-5): ")
 
 main()
-    #Menu save in txt file, and baker customer refer to the txt file.
+    #Menu save in csv file, and baker customer refer to the csv file.
