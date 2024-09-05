@@ -4,7 +4,6 @@
 #Order Tracking - status of orders
 #Product Review - feedback, suggestions
 menu_file ='menu.csv'
-import pandas as pd
 import csv
 import json
 import hashlib
