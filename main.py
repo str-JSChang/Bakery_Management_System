@@ -1,4 +1,4 @@
-import json
+import csv
 import hashlib
 
 #banner
@@ -12,14 +12,14 @@ def print_banner():
 
 # Main Menu
 def display_main_menu():
-    while True:
+    while True: 
         print("Welcome to Bakery Management System")
         print("1. Login. ")
         print("2. Signup. ")
         print("3. Exit the program. ")
         while True:
             try:
-                choice = int(input("Please enter your selection (1-3): "))
+                choice = int(input("Please enter your selection (1-3): "))  # REPROMPT WITH ERRORS EXCEPTION HANDLING
                 if choice in [1, 2, 3]:
                     break
                 else:
@@ -35,6 +35,15 @@ def display_main_menu():
             print("Exiting program...")
             exit()
 
+def validate_email():
+    while True:
+        email = input("Enter your Gmail address: ").strip()
+        if email and email.endswith("@gmail.com"):
+            return email
+        elif not email:
+            print("Email cannot be empty. Please try again.")
+        else:
+            print("Invalid email. Please use a valid domain. eg: (@gmail.com).")
 
 # Manager Login
 # Check Line112 - 2023-08-23
@@ -46,23 +55,28 @@ def ManagerLogin():
 
     # confirm manager password
     if confirmManager_password == manager_password:
-            try:
-                with open("manager_acc.json", "r") as file:
-                    existing_manager_acc = json.load(file)
+        try:
+            # Create a open file object, together with DictReader, create a Reader object using DictReader to find the header, and return the key values.
+            with open("manager_acc.csv", "r", newline='') as file:
+                reader = csv.DictReader(file)
+                existing_manager_acc = [row for row in reader]
 
-                if manager_username in existing_manager_acc:
-                    manager_stored_password = existing_manager_acc[manager_username]['manager_password']
-                    hashing_manager_password = hashlib.md5(manager_password.encode()).hexdigest()
-                    if manager_stored_password == hashing_manager_password:
-                        print("Welcome back, Mr.Jason")
-                    else:
-                        print("Invalid password")
+            # Using "List Comprehension" instead of building global empty list in the beginning.
+            manager_accounts = [account for account in existing_manager_acc if account['Username'] == manager_username]
+
+            if manager_accounts:
+                manager_stored_password = manager_accounts[0]['Password']
+                hashing_manager_password = hashlib.md5(manager_password.encode()).hexdigest()
+                if manager_stored_password == hashing_manager_password:
+                    print(f"Welcome back, {manager_accounts[0]['Name']}")
                 else:
-                    print("Manager username not found")
+                    print("Invalid password")
+            else:
+                print("Manager username not found")
 
-            except FileNotFoundError:
-                print("ERROR, NO MANAGER ACCOUNT EXIST IN THE SYSTEM, PLEASE CONTACT SYSTEM ADMINSTRATOR IMMEDIATELY")
-                signup()
+        except FileNotFoundError:
+            print("ERROR, NO MANAGER ACCOUNT EXISTS IN THE SYSTEM, PLEASE CONTACT SYSTEM ADMINISTRATOR IMMEDIATELY")
+            signup()
     else:
         print("Passwords do not match")
 
@@ -85,37 +99,33 @@ def signup():
 
 
     if signupOption == 1:
-        email = input("Please fill up your email address: ")
+        name = input("Please enter your name: ")
+        email = input("Please enter your email address: ")
+        username = input("Please enter your username: ")
         pwd = input("Please enter your password: ")
         confirmPwd = input("Confirm password: ")
-
+        
+        email = validate_email()
+        
         if confirmPwd == pwd:
-            enc = pwd.encode()
-            hashed_pwd = hashlib.md5(enc).hexdigest()
-            user_data = {
-                "email": email,
-                "password": hashed_pwd
-            }
-
-            try:
-                with open("users.json", "r") as file:
-                    existing_data = json.load(file)
-            except json.JSONDecodeError:
-                    existing_data = {}
-            except FileNotFoundError:
-                    existing_data = {}
-
-            if email in existing_data:
-                print("An account with this email already exists.\n")
+            hashed_pwd = hashlib.md5(pwd.encode()).hexdigest()
+            
+            # Validate the existing account
+            with open("customer_data.csv","r", newline='') as file:
+                reader = csv.DictReader(file)
+                existing_emails = [row['Email'] for row in reader]
+                existing_usernames = [row['Username'] for row in reader]
+            if email in existing_emails or  username in existing_usernames:
+                print("The account has existed.")
                 return
 
-            existing_data[email] = user_data
-
-            with open("users.json", "w") as file:
-                json.dump(existing_data, file, indent = 4)
+            # Append new row of data.
+            with open("customer_data.csv", "a", newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([name, email, username, hashed_pwd, "customer"])
             print("You have registered successfully.")
         else:
-            print("The password doesn't matched. \n")
+            print("The passwords doesn't match. \n")
 
     if signupOption == 2:
         ManagerLogin()
@@ -125,43 +135,30 @@ def signup():
         exit()
         
 
+def staffSignup():
+    name , staffid, username , email , password , role = input("Please enter staff's name, staff id, username, email, password and role.: ").split()
+
 # Login System
 def login():
     print("--------Login Page--------")
-    email = input("Please enter your email address: ")
+    username = input("Please enter your username: ")
     pwd = input("Please enter your password: ")
 
     try:
-        with open("users.json", "r") as file:
-            user_data = json.load(file)
-        try:
-            if user_data[email]['password'] == hashlib.md5(pwd.encode()).hexdigest():
-                print("Login successful!")
-            else:
-                print("Account exist, but wrong password.")
-        # When no account founded in users.json
-        except KeyError:
-            print("Account not found.\n","Please make sure your account is registered or ensure your email and password is correct.")
+        with open("customer_data.csv", "r", newline='') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                if row['Username'] == username:
+                    if row['Password'] == hashlib.md5(pwd.encode()).hexdigest():
+                        print(f"Login successful! Welcome, {row['Name']}.")
+                        return
+                    else:
+                        print("Account exists, but wrong password.")
+                        return
+            print("Account not found.\n", "Please make sure your account is registered or ensure your username and password are correct.")
     except FileNotFoundError:
-            print("Error: 'users.json' file not found.")
-            print("PLEASE CONTACT ADMINSTRATOR IMMEDIATELY")
-    except json.JSONDecodeError:
-            print("Error: Unable to read user data.")
-            print("PLEASE CONTACT ADMINSTRATOR IMMEDIATELY")
-    
-
-# load data from json (users)
-
-# load data from json (inventory)
-
-# load data from json (orders)
-
-# load data from json (feedback)
-
-# load data from json (sales)
-
-# load data from json (recipes)
-
+        print("Error: 'customer_data.csv' file not found.")
+        print("PLEASE CONTACT ADMINISTRATOR IMMEDIATELY")
 
 
 # Main program
@@ -170,8 +167,8 @@ def main():
     display_main_menu()
 
 
-main()
-
+if __name__ == "__main__":
+    main()
 
 
 
