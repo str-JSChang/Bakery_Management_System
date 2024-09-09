@@ -136,7 +136,7 @@ def signup():
         
 
 def staffSignup():
-    name , staffid, username , email , password , role = input("Please enter staff's name, staff id, username, email, password and role.: ").split()
+    name , staffid, username , email , password , role = input("Please enter staff's name, staff id, username, email, password and role.: ").split() # Unfinished feature
 
 # Login System
 def login():
