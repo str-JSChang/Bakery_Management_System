@@ -35,9 +35,8 @@ def display_main_menu():
             print("Exiting program...")
             exit()
 
-def validate_email():
+def validate_email(email):
     while True:
-        email = input("Enter your Gmail address: ").strip()
         if email and email.endswith("@gmail.com"):
             return email
         elif not email:
@@ -101,11 +100,10 @@ def signup():
     if signupOption == 1:
         name = input("Please enter your name: ")
         email = input("Please enter your email address: ")
+        email = validate_email(email)
         username = input("Please enter your username: ")
         pwd = input("Please enter your password: ")
         confirmPwd = input("Confirm password: ")
-        
-        email = validate_email()
         
         if confirmPwd == pwd:
             hashed_pwd = hashlib.md5(pwd.encode()).hexdigest()
