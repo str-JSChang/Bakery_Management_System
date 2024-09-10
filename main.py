@@ -35,6 +35,7 @@ def display_main_menu():
             print("Exiting program...")
             exit()
 
+'''
 def validate_email(email):
     while True:
         if email and email.endswith("@gmail.com"):
@@ -43,6 +44,7 @@ def validate_email(email):
             print("Email cannot be empty. Please try again.")
         else:
             print("Invalid email. Please use a valid domain. eg: (@gmail.com).")
+'''
 
 # Manager Login
 # Check Line112 - 2023-08-23
@@ -100,7 +102,7 @@ def signup():
     if signupOption == 1:
         name = input("Please enter your name: ")
         email = input("Please enter your email address: ")
-        email = validate_email(email)
+        #email = validate_email(email)
         username = input("Please enter your username: ")
         pwd = input("Please enter your password: ")
         confirmPwd = input("Confirm password: ")
@@ -148,7 +150,7 @@ def login():
             for row in reader:
                 if row['Username'] == username:
                     if row['Password'] == hashlib.md5(pwd.encode()).hexdigest():
-                        print(f"Login successful! Welcome, {row['Name']}.")
+                        print(f"Login successful! Welcome, {row.get('Name', username)}.")
                         return
                     else:
                         print("Account exists, but wrong password.")
