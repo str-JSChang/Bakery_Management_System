@@ -4,10 +4,7 @@
 #Order Tracking - status of orders
 #Product Review - feedback, suggestions
 import csv
-
-import csv
 import hashlib
-
 
 def validate_email():
     while True:
@@ -89,34 +86,14 @@ def cart():
                     price + " " * (18 - len(price)) +
                     stock
                     )
-                print("-"*90)
-
-        while True:
-            while True:
-                item_num = input("Enter item number to add (press q to quit): ")
-                if item_num == "q":
-                    break
-                else:
-                    continue
-            quantity = input("Enter quantity: ")
-            with open('menu.csv',newline ='') as menu:
-                items = csv.reader(menu)
-                next(items)
-
-                for row in items:
-                    if row[0] == item_num:
-                        with open('cart.csv', 'a') as cart:
-                            writer = csv.writer(cart)
-
-                            if cart.tell() == 0:
-                                writer.writerow(['No.','Name','Category','Price','Quantity'])
-                            
-                            writer.writerow([row[0],row[1],row[2],row[3], quantity])
-                        
-                    print(f"{row[1]} x {quantity} added to cart.") #this message should be delete after printing
-                    break
+            print("-"*90)
             #     user cart save in a straight line, line by line moving right 
-            
+    
+        order_num = map(int, input("Enter product number: ").split())
+
+        if product_number == order_num:
+            print(f"{product_name}\t, {price}")
+        print(f"Total Amount: {price}")
             # for line in csv:
             #     file.write(line)
             #     file.write('\n')
@@ -131,7 +108,6 @@ def cart():
         print("2. Remove items")
         print("3. Check Out")
         print("4. Back")
-
         choice = str(input("Enter your selection: "))
         if choice == "1":
             update_cart()
@@ -150,9 +126,9 @@ def feedback():
     pass
 
 
-def main_cus_page():
+def main_cus_page(username):
     while True:
-        print("-"*50 + "\n\t\t" + f"Welcome, .\n"+ "-"*50)
+        print("-"*50 + "\n\t" + f"Welcome, {username}.\n"+ "-"*50)
         print("1. Update Account")
         print("2. Shopping Cart")
         print("3. My Order")
@@ -160,18 +136,25 @@ def main_cus_page():
         print("5. Exit")
         print("-"*50)
 
-        choice = str(input("Enter your selection(1-4): "))
-        if choice == "1":
+        while True:
+            try:
+                choice = int(input("Enter your selection(1-4): "))
+                if choice in [1,2,3,4,5]:
+                    break
+                else:
+                    print("Please enter a valid option between 1-5")
+            except:
+                print("Invalid input. Please enter integer number between 1-5.")
+
+        if choice == 1:
             update_acc()
-        elif choice == "2":
+        elif choice == 2:
             cart()
-        elif choice == "3":
+        elif choice == 3:
             order()
-        elif choice == "4":
+        elif choice == 4:
             feedback()
-        elif choice == "5":
+        elif choice == 5:
             break
-        else:
-                print("Invalid selection. Enter number between 1-4.")
 
 main_cus_page()
