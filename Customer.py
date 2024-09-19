@@ -11,7 +11,7 @@ def validate_email():
         else:
             print("Invalid email. Please use a valid domain. eg: (@gmail.com).")
 
-def update_acc():
+def update_acc(username):
     # Validate old username and password first
     old_username = input("Enter your current username: ")
     old_password = input("Enter your current password: ")
@@ -63,12 +63,38 @@ def update_acc():
     
 
 def cart(username):
-    def update_cart():
+    # find customer cart
+    def cart_exist(cus_cart):
+        cus_cart = False
+        with open('order.csv','r') as file:
+            lines = file.readlines()
+
+        current_username = None
+        for line in lines:
+            if line.strip() == username:
+                current_username = username
+                cus_cart = True
+            elif current_username and "Order Status: in-cart" in line:
+                print("-"*50 + f"\n{username}'s Cart: ")
+                print(line.strip())  # status
+            elif current_username and line[0].isdigit():  # For lines starting with product number
+                print(line.strip())  # items
+            elif current_username and line.startswith("Total:"):
+                print(line.strip())  # total
+                print("-"*50)
+                return True
+        
+        if cus_cart == False:
+            print("Your cart is empty.")
+            return False
+
+    def update_cart(username):
         total_bill = 0
+        old_total = 0
         customer_cart = []
 
-        with open('menu.csv','r',newline='') as menu:
-            # saving csvdictreader in list so it can be iterate over multiple times
+        #Read and display the menu
+        with open('menu.csv', 'r', newline='') as menu:
             reader = list(csv.DictReader(menu))
             print('-'*90 + '\nProductNumber\tProductName\t\t\tCategory\tPrice\t\tStocks\n' + '-'*90)
 
@@ -86,84 +112,81 @@ def cart(username):
                     stock
                     )
             print("-"*90)
-            #     user cart save in a straight line, line by line moving right 
 
-        user_cart = False
-        with open('order.csv', 'r') as file:
-            lines = file.readlines()
-            current_username = None
-            for line in lines:
-                if line.strip() == username:
-                    user_cart = True
-                    print(f"\n{username}'s Cart: ")
-                elif current_username and line.startswith("Order Status: in-cart"):
-                    print(line.strip())  # status
-                elif current_username and line.startswith("-"):
-                    print(line.strip())  # items
-                elif current_username and line.startswith("Total:"):
-                    print(line.strip())  # total
-                    break
-                
-        if not user_cart:
-            print("Your cart is empty.") 
-
+        # Display user cart if it exists
+        cart_exist(username)
         while True:
             order_input = input("Enter item number to add to cart (q to quit): ").strip()
-
             if order_input.lower() == "q":
                 break
 
             try:
-                product_num = int(order_input)
+                order_input = int(order_input)
+                # product = next((item for item in reader if int(item['ProductNumber']) == order_input), None)
                 product_found = False
                 
+                with open('menu.csv', 'r', newline='') as menu:
+                    reader = list(csv.DictReader(menu))
                 for item in reader:
-                    if int(item.get('ProductNumber')) == product_num:
+                    if int(item.get('ProductNumber')) == order_input:
+                        product_number = item.get('ProductNumber')
                         product_name = item.get('ProductName')
-                        price = item.get('price').replace('RM','').strip()
+                        price = item.get('price').replace('RM', '').strip()
 
-                        # Validate the quantity input is integer data type
-                        try:
-                            quantity = int(input("Enter quantity: "))
-                        except ValueError:
-                            print("Please enter a valid integer quantity.")
-                            continue
-                        
-                        # display particualr things added in cart
-                        total_bill += float(price)*quantity
-                        customer_cart.append(f"{product_name}, RM{price} x {quantity}")
-                        print(f"Added to cart: {product_name}, RM{price} x {quantity}")
-                        
-                        # display the things in cart and total
+                        quantity = int(input("Enter quantity: "))
+
+                        total_bill += float(price) * quantity
+                        # Add product to the list (customer cart)
+                        customer_cart.append(f"{product_number} {product_name}, RM{price} x {quantity}")
+                        print(f"Added to cart: {product_number} {product_name}, RM{price} x {quantity}")
+
                         print(f"\nItems in {username}'s cart:")
                         for item in customer_cart:
-                            print(f"- {item}")
-                        print(f"\nTotal Amount: RM{total_bill:.2f}")
-                        
+                            print(f"{item}")
+                        print(f"\nTotal Amount: RM{total_bill + old_total:.2f}")
+
                         product_found = True
                         break
 
                 if not product_found:
-                    print(f"Item with number {product_num} not found.")
-
+                    print(f"Item with number {order_input} not found.")
             except ValueError:
-                print("Invlaid input. Please enter a valid item number or 'q' to quit.")
-            
-        if not customer_cart:
-            print("Your cart is empty.")
-            return
+                print("Invalid input. Please enter a valid item number or 'q' to quit.")
 
+        # Write updated cart to order csv
         with open('order.csv', 'a', newline='') as file:
             file.write(f"{username}\n")
+            file.write("Order Status: in-cart\n")
             for item in customer_cart:
-                file.write(f"- {item}\n")
-            file.write(f"Total: RM{total_bill:.2f}\n")
-            file.write("\n")
+                file.write(f"{item}\n")
+            file.write(f"Total: RM{total_bill + old_total:.2f}\n\n")
 
-    def remove_cart():
-        # with open('cart.csv','w') as cart:
-        #      writer = csv.writer(cart)
-        pass
+
+    def remove_cart(username):
+        if not cart_exist(username):
+            return
+        
+        while True:
+            remove_item = input("Enter the number of item you want to remove('q' to quit): ")
+            if remove_item.lower() == 'q':
+                break
+            
+            try:
+                remove_item = int(remove_item)
+                item_found = False
+                with open('order.csv', 'w') as file:
+                    lines = file.readlines()
+                    for line in lines:
+                        if remove_item != line[0].isdigit():
+                            file.write(line)
+                            item_found = True
+                        else:
+                            item_found = True
+                            print(f"{line.strip()} has been remove successfully.")
+                if not item_found:
+                    print(f"Item with number {remove_item} not found.")
+            except ValueError:
+                print("Invalid input. Please enter a valid item number or 'q' to quit.")
 
     while True:
         print("-"*50 + "\n\t" + "Shopping Cart\n"+ "-"*50)
@@ -174,17 +197,63 @@ def cart(username):
         print("-"*50)
         choice = str(input("Enter your selection: "))
         if choice == "1":
-            update_cart()
+            update_cart(username)
         elif choice == "2":
-            remove_cart()
+            remove_cart(username)
         elif choice == "3":
-            order()
+            order(username)
         elif choice == "4":
-            main_cus_page()
+            main_cus_page(username)
 
 
-def order():
-    pass
+def order(username):
+    cus_cart = False
+    with open('order.csv', 'r') as file:
+        lines = file.readlines()
+
+    current_username = None
+    for line in lines:
+        if line.strip() == username:
+            cus_cart = True
+            ordered = False
+            current_username = username
+
+        elif current_username and ("Order Status: in-cart" in line or "Order Status: order placed" in line):
+            if "in-cart" in line:
+                print("-"*50 + f"\n{username}'s Cart: ")
+            else:
+                print("-"*50 + f"\n{username}'s Order: ")
+                ordered = True
+            print(line.strip())  # status
+        elif current_username and line[0].isdigit():  # For lines starting with product number
+            print(line.strip())  # items
+        elif current_username and line.startswith("Total:"):
+            print(line.strip())  # total
+            print("-"*50)
+            break
+ 
+    if cus_cart and ordered == False:
+        order = input("Would you like to place your order?(yes/no): ")
+        if order.lower() == "yes":
+            with open('order.csv','w') as file:
+                cus_found = False
+                for line in lines:
+                    if line.strip() == username:
+                        cus_found = True
+                    elif cus_found and "Order Status: in-cart" in line:
+                        line = "Order Status: order placed\n"
+                        cus_found = False
+                    file.write(line)
+            
+            print("\t**Your order has been placed successfully.**")
+        else:
+            print("\t**Your items are still in shopping cart.**")
+    elif cus_cart and ordered == True:
+        print("**\tYour order has been placed.**")
+
+    if not cus_cart:
+        print(f"\tNo cart or order found for {username}")
+
 
 def feedback():
     pass
@@ -222,5 +291,5 @@ def main_cus_page(username):
             break
 
 if __name__ == "__main__":
-    username = "customer_name"  # storing customer username
+    username = "customer_name"  # storing customer username (testing purpose)
     main_cus_page(username)
