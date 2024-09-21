@@ -63,31 +63,6 @@ def update_acc(username):
     
 
 def cart(username):
-    # find customer cart
-    def cart_exist(cus_cart):
-        cus_cart = False
-        with open('order.csv','r') as file:
-            lines = file.readlines()
-
-        current_username = None
-        for line in lines:
-            if line.strip() == username:
-                current_username = username
-                cus_cart = True
-            elif current_username and "Order Status: in-cart" in line:
-                print("-"*50 + f"\n{username}'s Cart: ")
-                print(line.strip())  # status
-            elif current_username and line[0].isdigit():  # For lines starting with product number
-                print(line.strip())  # items
-            elif current_username and line.startswith("Total:"):
-                print(line.strip())  # total
-                print("-"*50)
-                return True
-        
-        if cus_cart == False:
-            print("Your cart is empty.")
-            return False
-
     def load_csv(csv_file):
         with open(csv_file,'r',newline='') as menu:
                 # read csv file in dictionary format
@@ -115,13 +90,56 @@ def cart(username):
             
         print("-"*90)
     
+    def find_cart(username):
+        with open('order.txt', 'r') as file:
+            lines = file.readlines()
+    
+        customer_cart = []
+        cart_found = False # check if username got a cart
+        status_check = False # check order status
+
+        for line in lines:
+            if line.strip() == username: # if the username is found
+                cart_found = True
+                continue # this will not add the username in txt file into the list
+            
+            if cart_found and "Order Status: in-cart" in line:
+                status_check = True
+                continue
+
+            elif cart_found and status_check:
+                if line.strip() == "": # break when meet empty line
+                    break
+                customer_cart.append(line.strip()) # add the status,items and total
+        
+        if customer_cart:
+            print(f"{username}'s Cart: ")
+            print("\n".join(customer_cart))
+            print("-" * 55)
+        else:
+            customer_cart = []
+
+        return customer_cart
+
+    
     def update_cart(username):
         data = load_csv('menu.csv')
         items = data.get('items',[])
-        customer_cart = []
-        total_bill = 0
 
         menu()
+        customer_cart = find_cart(username) # search for existing cart
+        total_bill = 0
+
+        if customer_cart:
+            old_total = customer_cart.pop() # remove the old total(last line)
+            if old_total.startswith("Total: RM"):
+                total_bill = float(old_total.replace("Total: RM","").strip())
+            else:
+                customer_cart.append(old_total)
+
+        if not customer_cart:
+            print(f"Your cart is empty.")
+
         while True:
             order_item = (input("Enter the Product Number to add to cart('q' to quit): "))
 
@@ -143,49 +161,58 @@ def cart(username):
                         total_bill += float(price) * quantity
                         print(f"Added to cart: {item['ProductName']}, {item['price']} x {quantity}")
                         customer_cart.append(f"{item['ProductNumber']} {item['ProductName']} {price} x {quantity}")
-                    
-                        print("-"*50 + f"\nItems in {username}'s cart:") # display user cart
-                        for item in customer_cart:
-                            print(f"{item}")
-                        print(f"\nTotal Amount: RM{total_bill:.2f}\n" + "-"*50)
-                        menu()
-
+            
                     except ValueError:
                         print("Please enter a valid integer.")
 
-        with open('order.txt','a',newline='') as file:
+            print("-"*50 + f"\nItems in {username}'s cart:") # display current user cart
+            for item in customer_cart:
+                print(f"{item}")
+            print(f"\nTotal Amount: RM{total_bill:.2f}\n" + "-"*50)
+            menu()
+
+        clear_cart(username) # clear old cart if cart exist before writing the new cart
+
+        # write all items in customer_cart into txt when user quit
+        with open('order.txt','a') as file:
             file.write(f"{username}\n")
             file.write("Order Status: in-cart\n")
             for item in customer_cart:
                 file.write(f"{item}\n")
             file.write(f"Total: RM{total_bill:.2f}\n\n")
 
+    def clear_cart(username):
+        with open('order.txt', 'r') as file:
+            lines = file.readlines()
 
-    def remove_cart(username):
-        if not cart_exist(username):
-            return
-        
-        while True:
-            remove_item = input("Enter the number of item you want to remove('q' to quit): ")
-            if remove_item.lower() == 'q':
-                break
+        # create the list to keep the lines
+        new_lines = []
+        clear_line = False
+        status_check = False # To ensure the cart status is 'in-cart'
+
+        # Search for username's cart and status 'in-cart'
+        for line in lines:
+            if line.strip() == username:
+                next_line = lines[lines.index(line) + 1].strip()
+                if "Order Status: in-cart" in next_line:
+                    clear_line = True
+                    status_check = True
+                    continue
             
-            try:
-                remove_item = int(remove_item)
-                item_found = False
-                with open('order.csv', 'w') as file:
-                    lines = file.readlines()
-                    for line in lines:
-                        if remove_item != line[0].isdigit():
-                            file.write(line)
-                            item_found = True
-                        else:
-                            item_found = True
-                            print(f"{line.strip()} has been remove successfully.")
-                if not item_found:
-                    print(f"Item with number {remove_item} not found.")
-            except ValueError:
-                print("Invalid input. Please enter a valid item number or 'q' to quit.")
+            # stop clearing when meet empty line
+            if clear_line and line.strip() == "":
+                clear_line = False
+                continue
+
+            if not clear_line:
+                new_lines.append(line)
+
+        if status_check:
+            # write the file back without the cleared cart
+            with open('order.txt', 'w') as file:
+                file.writelines(new_lines)
+        else:
+            print("Your cart is empty.")
 
     def check_out(username):
         cus_cart = False
@@ -226,7 +253,7 @@ def cart(username):
                             cus_found = False
                         file.write(line)
                 
-                print("\t**Your order has been placed successfully.**")
+                print("**Your order has been placed successfully.**")
             else:
                 print("\t**Your items are still in shopping cart.**")
         elif cus_cart and ordered == True:
@@ -234,6 +261,9 @@ def cart(username):
 
         if not cus_cart:
             print("Your cart is empty.")
+
+    def remove_cart():
+        pass
 
     while True:
         print("-"*50 + "\n\t" + "Shopping Cart\n"+ "-"*50)
@@ -250,7 +280,7 @@ def cart(username):
         elif choice == "3":
             check_out(username)
         elif choice == "4":
-            main_cus_page(username)
+            pass
 
 
 def order(username):
