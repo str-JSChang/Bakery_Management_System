@@ -62,7 +62,7 @@ def update_acc(username):
         print("Customer not found.")
     
 
-def cart(username):
+def cart_page(username):
     def load_csv(csv_file):
         with open(csv_file,'r',newline='') as menu:
                 # read csv file in dictionary format
@@ -159,7 +159,7 @@ def cart(username):
                     try:
                         quantity = int(input("Enter the quantity of product: "))
                         total_bill += float(price) * quantity
-                        print(f"Added to cart: {item['ProductName']}, {item['price']} x {quantity}")
+                        print(f"Added to cart: {item['ProductName']} {item['price']} x {quantity}")
                         customer_cart.append(f"{item['ProductNumber']} {item['ProductName']} {price} x {quantity}")
             
                     except ValueError:
@@ -262,8 +262,89 @@ def cart(username):
         if not cus_cart:
             print("Your cart is empty.")
 
-    def remove_cart():
-        pass
+    def remove_cart(username):
+        customer_cart = find_cart(username)
+
+        if not customer_cart:
+            print("Your cart is empty.")
+            return
+
+        # Initialize total bill from the existing cart
+        total_bill = 0
+        old_total = customer_cart.pop()  # Get and remove the old total
+        if old_total.startswith("Total: RM"):
+            total_bill = float(old_total.replace("Total: RM", "").strip())
+        else:
+            customer_cart.append(old_total)  # Put it back if not valid
+
+        while True:
+            print("\n#1 Enter number of item to remove.")
+            print("#2 Type in 'clear' to clear shopping cart.")
+            print("#3 Type 'q' to quit.")
+            print("-" * 55)
+
+            cus_input = input("Enter the number of item to remove from cart: ")
+
+            if cus_input.lower() == 'q':
+                print("Exiting...")
+                break
+            elif cus_input.lower() == "clear":
+                clear_cart(username)
+                print("Your cart has been cleared.")
+                break
+            elif cus_input.isdigit():
+                remove_num = int(cus_input)
+                item_found = False
+
+                for item in customer_cart:
+                    if item.startswith(str(remove_num)):
+                        # get price and quantity from item inside cart
+                        product_part = item.split()
+                        item_part = item.split("RM")[-1] # split item_details into 2 parts and take second part
+                        
+                        price, quantity = map(str.strip, item_part.split("x")) # split 'x', then map p and q values
+                        price = float(price)
+                        quantity = int(quantity)
+
+                        product_name = " ".join(product_part[1:-3])
+
+                        remove_qty = int(input("Enter the quantity to remove: "))
+                        
+                        item_found = True
+                        if remove_qty > quantity:
+                            print("You cannot remove more than you have.")
+                            continue
+                        
+                        if remove_qty == quantity:
+                            customer_cart.remove(item)
+                            total_bill -= price * quantity
+                            print(f"Removed all {quantity} of {product_name}.")
+                        else:
+                            new_qty = quantity - remove_qty
+                            updated_item = f"{remove_num}  {product_name} RM{price:.2f} x {new_qty}"
+                            customer_cart[customer_cart.index(item)] = updated_item
+                            total_bill -= price * remove_qty
+
+                            print("-"*50 + f"\nItems in {username}'s cart:") # display current user cart
+                            for item in customer_cart:
+                                print(f"{item}")
+                            print(f"\nTotal Amount: RM{total_bill:.2f}\n" + "-"*50)
+                        break  # Exit the loop after modify cart item list
+
+                if not item_found:
+                    print("Item not found in your cart.")
+            else:
+                print("Please enter a valid number, 'clear', or 'q' to quit.")
+
+    # Write the updated cart back to the file
+        clear_cart(username)
+
+        with open('order.txt', 'a') as file:
+            file.write(f"{username}\n")
+            file.write("Order Status: in-cart\n")
+            for item in customer_cart:
+                file.write(f"{item}\n")
+            file.write(f"Total: RM{total_bill:.2f}\n\n")
 
     while True:
         print("-"*50 + "\n\t" + "Shopping Cart\n"+ "-"*50)
@@ -354,7 +435,7 @@ def main_cus_page(username):
         if choice == 1:
             update_acc(username)
         elif choice == 2:
-            cart(username)
+            cart_page(username)
         elif choice == 3:
             order(username)
         elif choice == 4:
@@ -363,5 +444,6 @@ def main_cus_page(username):
             break
 
 if __name__ == "__main__":
-    username = "customer_name"  # storing customer username (testing purpose)
+    username = "Bowie"  # storing customer username (testing purpose)
     main_cus_page(username)
+
