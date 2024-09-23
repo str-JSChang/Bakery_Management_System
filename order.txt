@@ -50,6 +50,7 @@ Total: RM66.80
 
 YY
 Order Status: order placed
+Order Number: 2
 4  Chocolate Chips Cream Bun 3.00 x 2
 7  Cranberry Biscuit 5.00 x 2
 6  Mexico Bun 3.40 x 1
@@ -57,7 +58,7 @@ Total: RM19.40
 
 ShinJi
 Order Status: order placed
-Order Number: 2
+Order Number: 3
 4  Chocolate Chips Cream Bun 3.00 x 2
 3  Matcha Cake 57.00 x 1
 Total: RM63.00
