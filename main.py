@@ -136,7 +136,15 @@ def signup():
         
 
 def staffSignup():
-    name , staffid, username , email , password , role = input("Please enter staff's name, staff id, username, email, password and role.: ").split() # Unfinished feature
+    name = input("Please enter your name:")
+    staffid = input("Please enter your Staff ID that you want to register: ")
+    username = input("Please enter your username: ")
+    email = validate_email
+    pwd = input("Please enter your password: ")
+    confirmPwd = input("Please confirm your password: ")
+    
+    if confirmPwd == pwd:
+        hashed_pwd = hashlib.md5(pwd.encode()).hexdigest()
 
 # Login System
 def login():
@@ -169,10 +177,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
