@@ -1,42 +1,64 @@
-Bowie
+Olive
 Order Status: in-cart
-3 Matcha Cake ,RM57.00 x 1
-4 Chocolate Chips Cream Bun, RM3.00 x 1
-9  Macaron , RM6.00 x 1
-1  Classic Mango , RM43.00 x 1
-Total: RM49.00
+9  Macaron , RM6.00 x 8
+8  Meringue Cookie , RM3.20 x 1
+Total: RM51.20
+
+customer_name (testing purpose) ***
+Order Status: order placed
+Order Number: 1
+5  Corn Bun , RM2.00 x 4
+9  Macaron , RM6.00 x 8
+8  Meringue Cookie , RM3.20 x 1
+Total: RM59.20
+
+Ming
+Order Status: in-cart
+3  Matcha Cake , RM57.00 x 1
+Total: RM57.00
+
+Kai
+Order Status: in-cart
+8  Meringue Cookie, RM3.20 x 2
+6  Mexico Bun, RM3.40 x 1
+Total: RM9.80
 
 Chong
 Order Status: in-cart
-4  Chocolate Chips Cream Bun , RM3.00 x 1
 7  Cranberry Biscuit , RM5.00 x 1
 9  Macaron , RM6.00 x 2
-Total: RM20.00
-
-Olive
-Order Status: in-cart
-5  Corn Bun , RM2.00 x 4
-9  Macaron , RM6.00 x 8
-8  Meringue Cookie , RM3.20 x 1
-Total: RM59.20
+5  Corn Bun, RM2.00 x 3
+2  Blueberry Cheesecake, RM55.00 x 1
+6  Mexico Bun, RM3.40 x 1
+Total: RM81.40
 
 ShinJi
 Order Status: in-cart
-5  Corn Bun , RM2.00 x 3
-3  Matcha Cake , RM57.00 x 1
-Total: RM63.00
+5  Corn Bun RM2.00 x 2
+2  Blueberry Cheesecake RM55.00 x 1
+5  Corn Bun RM2.00 x 1
+9  Macaron RM6.00 x 1
+8  Meringue Cookie RM3.20 x 1
+Total: RM70.20
 
-customer_name
+Bowie
 Order Status: order placed
-5  Corn Bun , RM2.00 x 4
-9  Macaron , RM6.00 x 8
-8  Meringue Cookie , RM3.20 x 1
-Total: RM59.20
+4  Chocolate Chips Cream Bun, RM3.00 x 1
+3  Matcha Cake ,RM57.00 x 1
+6  Mexico Bun, RM3.40 x 2
+Total: RM66.80
 
-Ming's Cart:
-Order Status: in-cart
-6  Mexico Bun , RM3.4 x 2
-4  Chocolate Chips Cream Bun , RM3.0 x 5
-1  Classic Mango , RM43.0 x 0
-Total: RM21.80
+YY
+Order Status: order placed
+4  Chocolate Chips Cream Bun 3.00 x 2
+7  Cranberry Biscuit 5.00 x 2
+6  Mexico Bun 3.40 x 1
+Total: RM19.40
+
+ShinJi
+Order Status: order placed
+Order Number: 2
+4  Chocolate Chips Cream Bun 3.00 x 2
+3  Matcha Cake 57.00 x 1
+Total: RM63.00
 
