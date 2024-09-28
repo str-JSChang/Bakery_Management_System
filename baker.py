@@ -1,205 +1,250 @@
-import pandas as pd
+def baker_menu():
+    print("----------Baker's Menu----------")
+    print("1. Store Menu")
+    print("2. Manage Recipes")
+    print("3. Inventory check")
+    print("4. Record Production Details")
+    print("5. Report Equipment Issues")
+    print("6. Exit")
 
-# Home
-def home():
-    print("--------Baker--------")
-    print("1.Menu")
-    print("2.Recipe")
-    print("3.Inventory")
-    print("4.Product Record")
-    print("5.Equipment")
-    print("6.Exit")
     while True:
         try:
-            option = int(input("Please enter your selection (1-5): "))
-            if option in [1, 2, 3, 4, 5]:
-                break
+            choice = int(input("Please enter your selection (1-6): "))
+            if choice == 1:
+                store_menu()
+            elif choice == 2:
+                # Call manage_recipes() function
+                pass
+            elif choice == 3:
+                # Call verify_ingredients() function
+                pass
+            elif choice == 4:
+                # Call record_production() function
+                pass
+            elif choice == 5:
+                # Call report_equipment() function
+                pass
+            elif choice == 6:
+                print("Exiting Baker's Menu...")
+                return
             else:
-                print("Please enter a valid option between 1 to 5.")
+                print("Please enter a valid option between 1 to 6.")
         except ValueError:
-            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 to 5")
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 6.")
 
-    if option == 1:
-        menu()
-    elif option == 2:
-        recipe()
-    elif option == 3:
-        inventory()
-    elif option == 4:
-        product_record()
-    elif option == 5:
-        equipment()
-    elif option == 6:
-        exit()    
-
-# MENU
-def menu():
-    print("------Baker's Menu------")
-    print("What do you want to do?")
-    print("1. Create new product ")
-    print("2. View all products")
-    print("3. Update existing products")
-    print("4. Delete product")
-    print("5. Back")
+# Store Menu
+def store_menu():
+    print("----------Store Menu----------")
+    try:
+        with open("menu.txt", "r") as file:
+            menu_items = [line.strip().split(",") for line in file]
+    except FileNotFoundError:
+        print("Error: 'your_file.txt' file not found.")
+        return
 
     while True:
+        print("1. View Menu")
+        print("2. Create New Menu Item")
+        print("3. Update Existing Menu Item")
+        print("4. Remove Menu Item")
+        print("5. Back to Baker's Menu")
+    
         try:
             choice = int(input("Please enter your selection (1-5): "))
-            if choice in [1, 2, 3, 4, 5]:
-                break
+            if choice == 1:
+                display_menu(menu_items)
+            elif choice == 2:
+                menu_items = create_menu_item(menu_items)
+            elif choice == 3:
+                menu_items = update_menu_item(menu_items)
+            elif choice == 4:
+                menu_items = remove_menu_item(menu_items)
+            elif choice == 5:
+                print("Returning to Baker's Menu...")
+                return
             else:
                 print("Please enter a valid option between 1 to 5.")
         except ValueError:
-            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 to 5")
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 5.")
 
-    if choice == 1:
-        menuTable = pd.read_csv("menu.csv")
-        print(menuTable)
+def save_menu(menu_items):
+    try:
+        with open("menu.txt", "w", newline="") as file:
+            for item in menu_items:
+                file.write(",".join(item) + "\n")
+    except:
+        print("Error occurred while updating the menu file.")
 
+def display_menu(menu_items):
+    print("----------Current Menu----------")
+    for item in menu_items:
+        print(f"Item: {item[0]}, Price: {item[1]}")
 
-    elif choice == 2:
-        view = open('menu.txt','r')
-        print(view.read())
-        
-    elif choice == 3:
-        view = open('menu.txt','r')
-        print(view.read())
-        print("Which product you want to update?")
-        update_input = input("Enter the number of the product only (EXP: '1.tiramisu cake', enter 1):\n")
-        update = open('menu.txt','w')
-        update.write(update_input)
+def create_menu_item(menu_items):
+    print("----------Create New Menu Item----------")
+    item_name = input("Enter the item name: ")
+    item_price = input("Enter the item price: ")
+    print(f"New item: {item_name}, Price: {item_price}")
+    confirm = input("Confirm to add this item? (y/n): ")
+    if confirm.lower() == "y":
+        menu_items.append([item_name, item_price])
+        print("Item added successfully.")
+        save_menu(menu_items)
+    else:
+        print("Item creation cancelled.")
+    return menu_items
 
-    elif choice == 4:
-        pass
-    elif choice == 5:
-        home()
+def update_menu_item(menu_items):
+    print("----------Update Existing Menu Item----------")
+    display_menu(menu_items)
+    item_name = input("Enter the item name to update: ")
+    for item in menu_items:
+        if item[0] == item_name:
+            new_price = input(f"Enter the new price for {item[0]} (current: {item[1]}): ")
+            print(f"Updating {item[0]} - Price: {item[1]} -> {new_price}")
+            confirm = input("Confirm the update? (y/n): ")
+            if confirm.lower() == "y":
+                item[1] = new_price
+                print("Item updated successfully.")
+                save_menu(menu_items)
+            else:
+                print("Update cancelled.")
+            return menu_items
+    print("Item not found.")
+    return menu_items
 
-
-
-
-#recipe, CRUD by Baker
-def recipe():
-    print("------Avengers' Bakery Recipe------")
-    print("1.Add new recipe")
-    print("View recipe")
-    print("2.Update")
-    print("3.Delete")
-    print("4.Return to Home")
-
-    input=("Choose which to operate(1-4):")
-
-
-
-#inventory
-def inventory():
-    print("------Avengers' Bakery Inventory------")
-    print("1.Add on new inventory")
-    print("2.Update")
-    print("3.Check")
-    print("4.Delete inventory")
-    print("5.Return to Home")
-
-    input=("Choose which to operate(1-5):")
-
-    list=["fruit", "flour", "egg", "sugar", "vanilla extract"]
-    print(list)
-    option=input("Which inventory you want to check? : ")
-    fruit= "fruit"
-    flour= "flour"
-    egg= "egg"
-    sugar= "sugar"
-    vanilla= "vanilla extract"
-
-
-    def fruitamt() :
-        while fruit<10:
-            print("Warning! Need to purchase new stock!")
-            print("Your stock remaining :" + fruit)
-        else:
-            print("Still got stock no worries")
-            print("Your stock remaining :" + fruit)
-
-    def flouramt():
-        while flour<2:
-            print("Warning! Need to purchase new stock!")
-            print("Your stock remaining :" + flour)
-        else:
-            print("Still got stock no worries")
-            print("Your stock remaining :" + flour)
-
-    def eggamt():
-        while egg<20:
-            print("Warning! Need to purchase new stock!")
-            print("Your stock remaining :" + egg)
-        else:
-            print("Still got stock no worries")
-            print("Your stock remaining :" + egg)
-
-    def sugaramt():
-        while sugar<2:
-            print("Warning! Need to purchase new stock!")
-            print("Your stock remaining :" + sugar)
-        else:
-            print("Still got stock no worries")
-            print("Your stock remaining :" + sugar)
-
-    def vanillaamt():
-        while vanilla<1:
-            print("Warning! Need to purchase new stock!")
-            print("Your stock remaining :" + vanilla)
-        else:
-            print("Still got stock no worries")
-            print("Your stock remaining :" + vanilla)
-
-    if option==fruit:
-        fruitamt()
-
-    if option==flour:
-        flouramt()
-
-    if option==egg:
-        eggamt()
-
-    if option==sugar:
-        sugaramt()
-
-    if option==vanilla:
-        vanillaamt()
+def remove_menu_item(menu_items):
+    print("----------Remove Menu Item----------")
+    display_menu(menu_items)
+    item_name = input("Enter the item name to remove: ")
+    for item in menu_items:
+        if item[0] == item_name:
+            print(f"Removing {item[0]} - Price: {item[1]}")
+            confirm = input("Confirm the removal? (y/n): ")
+            if confirm.lower() == "y":
+                menu_items.remove(item)
+                print("Item removed successfully.")
+                save_menu(menu_items)
+            else:
+                print("Removal cancelled.")
+            return menu_items
+    print("Item not found.")
+    return menu_items
 
 
 
-#equipment
-def equipment():
-    print("------Avengers' Bakery Equipment------")
-    print("1.New Equipment")
-    print("2.Check")
-    print("3.Update")
-    print("4.Delete")
-    print("5.Return to Home")
+def manage_recipes():
+    print("----------Manage Recipes----------")
+    try:
+        with open("recipes.txt", "r") as file:
+            recipes = [line.strip().split(",") for line in file]
+    except FileNotFoundError:
+        print("Error: 'recipes.txt' file not found.")
+        return
 
-    input=("Choose which to operate(1-5):")
+    while True:
+        print("1. View Recipes")
+        print("2. Create New Recipe")
+        print("3. Update Existing Recipe")
+        print("4. Remove Recipe")
+        print("5. Back to Baker's Menu")
 
-    list=["oven", "fridge", "stand mixer"]
-    print(list)
-    option=input("Which one you want to choose? :")
+        try:
+            choice = int(input("Please enter your selection (1-5): "))
+            if choice == 1:
+                display_recipes(recipes)
+            elif choice == 2:
+                recipes = create_recipe(recipes)
+            elif choice == 3:
+                recipes = update_recipe(recipes)
+            elif choice == 4:
+                recipes = remove_recipe(recipes)
+            elif choice == 5:
+                print("Returning to Baker's Menu...")
+                return
+            else:
+                print("Please enter a valid option between 1 to 5.")
+        except ValueError:
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 5.")
 
-    oven="oven"
-    fridge="frigde"
-    stand_mixer="stand mixer"
+def display_recipes(recipes):
+    print("----------Current Recipes----------")
+    for recipe in recipes:
+        print(f"Name: {recipe[0]}, Ingredients: {recipe[1]}, Instructions: {recipe[2]}")
 
+def create_recipe(recipes):
+    print("----------Create New Recipe----------")
+    recipe_name = input("Enter the recipe name: ")
+    recipe_ingredients = input("Enter the recipe ingredients (comma-separated): ")
+    recipe_instructions = input("Enter the recipe instructions: ")
+    print(f"New recipe: {recipe_name}, Ingredients: {recipe_ingredients}, Instructions: {recipe_instructions}")
+    confirm = input("Confirm to add this recipe? (y/n): ")
+    if confirm.lower() == "y":
+        recipes.append([recipe_name, recipe_ingredients, recipe_instructions])
+        print("Recipe added successfully.")
+        save_recipes(recipes)
+    else:
+        print("Recipe creation cancelled.")
+    return recipes
 
+def update_recipe(recipes):
+    print("----------Update Existing Recipe----------")
+    display_recipes(recipes)
+    recipe_name = input("Enter the recipe name to update: ")
+    for recipe in recipes:
+        if recipe[0] == recipe_name:
+            new_ingredients = input(f"Enter the new ingredients for {recipe[0]} (current: {recipe[1]}): ")
+            new_instructions = input(f"Enter the new instructions for {recipe[0]} (current: {recipe[2]}): ")
+            print(f"Updating {recipe[0]} - Ingredients: {recipe[1]} -> {new_ingredients}, Instructions: {recipe[2]} -> {new_instructions}")
+            confirm = input("Confirm the update? (y/n): ")
+            if confirm.lower() == "y":
+                recipe[1] = new_ingredients
+                recipe[2] = new_instructions
+                print("Recipe updated successfully.")
+                save_recipes(recipes)
+            else:
+                print("Update cancelled.")
+            return recipes
+    print("Recipe not found.")
+    return recipes
 
-    if option==oven :
-        print("You want to check\n1.Maintainence period\n\t or \n2.Last mantainence date?")
+def remove_recipe(recipes):
+    print("----------Remove Recipe----------")
+    display_recipes(recipes)
+    recipe_name = input("Enter the recipe name to remove: ")
+    for recipe in recipes:
+        if recipe[0] == recipe_name:
+            print(f"Removing {recipe[0]}")
+            confirm = input("Confirm the removal? (y/n): ")
+            if confirm.lower() == "y":
+                recipes.remove(recipe)
+                print("Recipe removed successfully.")
+                save_recipes(recipes)
+            else:
+                print("Removal cancelled.")
+            return recipes
+    print("Recipe not found.")
+    return recipes
 
+def save_recipes(recipes):
+    try:
+        with open("recipes.txt", "w", newline="") as file:
+            for recipe in recipes:
+                file.write(",".join(recipe) + "\n")
+    except:
+        print("Error occurred while updating the recipes file.")
 
-    if option==fridge :
-        print("You want to check\n1.Maintainence period\n\t or \n2.Last mantainence date?")
+def verify_ingredients():
+    print("----------Verify Ingredient Inventory----------")
+    # Code to verify ingredient inventory
+    pass
 
-    if option==stand_mixer :
-        print("You want to check\n1.Maintainence period\n\t or \n2.Last mantainence date?")
+def record_production():
+    print("----------Record Production Details----------")
+    # Code to record production details
+    pass
 
-
-
-#start
-home()
+def report_equipment():
+    print("----------Report Equipment Issues----------")
+    # Code to report equipment issues
+    pass
