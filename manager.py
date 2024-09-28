@@ -57,6 +57,35 @@ def manage_credentials():
         except ValueError:
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 5.")
 
+def view_credentials():
+    try:
+        with open("user_data.csv", "r") as file:
+            user_data = []
+            for line in file:
+                user_data.append(line.strip().split(","))
+    except FileNotFoundError:
+        print("Error: 'user_data.csv' file not found.")
+        return
+
+    print("----------User Credentials----------")
+    for user in user_data:
+        print(f"Name: {user[0]}, Email: {user[1]}, Username: {user[2]}, Role: {user[4]}")
+
+
+def add_new_user():
+    print("----------Add New User----------")
+    # Code to add a new user
+    pass
+
+def update_user():
+    print("----------Update Existing User----------")
+    # Code to update an existing user
+    pass
+
+def delete_user():
+    print("----------Delete User----------")
+    # Code to delete a user
+    pass
 
 def manage_orders():
     print("----------Manage Orders----------")
@@ -77,3 +106,4 @@ def view_customer_feedback():
     print("----------View Customer Feedback----------")
     # Code to view customer feedback
     pass
+
