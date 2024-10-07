@@ -53,4 +53,19 @@ Order Status: order placed
 2  Blueberry Cheesecake 55.00 x 1
 Total: RM55.00
 
+Chong
+Order Number: 547
+Order Status: order placed
+6  Mexico Bun, RM3.40 x 2
+3  Matcha Cake, RM57.00 x 1
+8  Meringue Cookie, RM3.20 x 2
+Total: RM70.20
+
+Chong
+Order Status: cancelled
+6  Mexico Bun, RM3.40 x 2
+3  Matcha Cake, RM57.00 x 1
+8  Meringue Cookie, RM3.20 x 2
+Total: RM70.20
+
 
