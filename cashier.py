@@ -1,26 +1,24 @@
 import random
 from datetime import datetime
 
-# Load CSV file manually without using csv module
 def load_csv():
-    csv_file = 'menu.csv'   # Hardcoded filename for the menu
+    csv_file = 'menu.csv'   
     data = {'items': []}
     
     try:
         with open(csv_file, 'r') as menu_file:
             lines = menu_file.readlines()
-            headers = lines[0].strip().split(',')  # Extract headers
+            headers = lines[0].strip().split(',')  
             
-            for line in lines[1:]:  # Skip header line
+            for line in lines[1:]:  
                 values = line.strip().split(',')
-                item = dict(zip(headers, values))  # Combine headers with values
+                item = dict(zip(headers, values))  
                 data['items'].append(item)
         return data
     except FileNotFoundError:
         print(f"Error: '{csv_file}' file not found.")
         return data
 
-# Display Menu
 def display_menu(menu):
     items = menu['items']
     
@@ -35,7 +33,6 @@ def display_menu(menu):
         price = item.get('price').strip()
         stock = item.get('stocksAmount').strip()
         
-        # Print formatted output
         print(
             f"{product_number: <15}"
             f"{product_name: <35}"
@@ -46,13 +43,12 @@ def display_menu(menu):
     
     print('-' * 90)
 
-# Apply discounts to items
 def manage_discount(menu):
     prod_num = input("Enter Product Number to apply discount: ")
     discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
     for item in menu['items']:
         if item['ProductNumber'] == prod_num:
-            original_price = float(item['price'].replace('RM', ''))  # Removing 'RM' for calculation
+            original_price = float(item['price'].replace('RM', ''))  
             discounted_price = original_price - original_price * (discount / 100)
             item['price'] = f"RM{discounted_price:.2f}"
             print(f"Discount applied: {item['ProductName']} new price is {item['price']} (was RM{original_price:.2f})")
@@ -60,66 +56,202 @@ def manage_discount(menu):
     else:
         print("Product not found!")
 
-# Complete transaction and generate receipt
-def complete_transaction(menu):
-    total = 0
-    items_bought = []
-    quantity_sold = {}
+def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
+    try:
+        with open(order_file, 'r') as file:
+            lines = file.readlines()
 
-    customer_name = input("Enter Customer Name: ")
+        current_order = {}
+        orders = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:  
+                if current_order:
+                    orders.append(current_order)
+                    current_order = {}
+                continue
 
-    while True:
-        prod_num = input("Enter Product Number to purchase (or 'done' to finish): ")
-        if prod_num == 'done':
-            break
-        for item in menu['items']:
-            if item['ProductNumber'] == prod_num and int(item['stocksAmount']) > 0:
-                quantity = int(input(f"How many {item['ProductName']}s? "))
-                if quantity <= int(item['stocksAmount']):
-                    total += float(item['price'].replace('RM', '')) * quantity
-                    item['stocksAmount'] = str(int(item['stocksAmount']) - quantity)
-                    items_bought.append(f"{quantity} * {item['ProductName'].strip()} - RM{float(item['price'].replace('RM', '')) * quantity:.2f}")
-                    # Track the quantity sold for the product
-                    if item['ProductName'] in quantity_sold:
-                        quantity_sold[item['ProductName']] += quantity
+            if 'Order Number:' in line:
+                current_order['OrderNumber'] = line.split(': ')[1]
+            elif 'Order Status:' in line:
+                current_order['Status'] = line.split(': ')[1]
+            elif any(char.isdigit() for char in line) and 'Total' not in line:
+                parts = line.split(' x ')
+                if len(parts) == 2:  
+                    quantity = int(parts[1].strip())  
+
+                    product_details = parts[0].rsplit(',', 1)
+                    
+                    if len(product_details) == 2:  
+                        product_name = product_details[0].split(' ', 1)[1].strip()  
+                        price = float(product_details[1].replace('RM', '').strip())  
+
+                        if 'Items' not in current_order:
+                            current_order['Items'] = []
+                        current_order['Items'].append({
+                            'ProductName': product_name,
+                            'Price': price,
+                            'Quantity': quantity
+                        })
                     else:
-                        quantity_sold[item['ProductName']] = quantity
+                        print(f"Warning: Invalid product format in line: {line}")
                 else:
-                    print(f"Only {item['stocksAmount']} left in stock.")
+                    print(f"Warning: Invalid format in line: {line}")
+            elif 'Total:' in line:
+                current_order['Total'] = float(line.split('RM')[1].strip())
+            else:
+                if 'CustomerName' not in current_order:
+                    current_order['CustomerName'] = line
+
+        if current_order:
+            orders.append(current_order)
+
+        for order in orders:
+            if order['Status'] == 'order placed':
+                customer_name = order['CustomerName']
+                total = order['Total']
+                items_bought = []
+                
+                for item in order['Items']:
+                    quantity = item['Quantity']
+                    product_name = item['ProductName']
+                    price = item['Price']
+                    
+                    for menu_item in menu['items']:
+                        if menu_item['ProductName'] == product_name:
+                            if int(menu_item['stocksAmount']) >= quantity:
+                                menu_item['stocksAmount'] = str(int(menu_item['stocksAmount']) - quantity)
+                                items_bought.append(f"{quantity} * {product_name} - RM{price * quantity:.2f}")
+                            else:
+                                print(f"Not enough stock for {product_name}.")
+                            break
+
+                bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
+
+                now = datetime.now()
+                date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+
+                print("\n--- RECEIPT ---")
+                print("DATA INTO BAKERY SDN.BHD")
+                print(f"WELCOME {customer_name}")
+                print(f"Bill ID: {bill_id}")
+                print(f"Date: {date_time}")
+                print("-" * 40)
+                print(f"Customer Name: {customer_name}")
+                print("Order Summary:")
+                for order in items_bought:
+                    print(order)
+                print(f"Total: RM{total:.2f}")
+                print("-" * 40)
+                print(f"--- THANK YOU {customer_name}, SEE YOU NEXT TIME! ---")
+
+                write_receipt(customer_name, items_bought, total, bill_id, date_time)
+
+                update_order_status(customer_name, order['OrderNumber'], 'Completed', order_file)
                 break
         else:
-            print("Product not found or out of stock!")
+            print("No pending orders found.")
+    except FileNotFoundError:
+        print(f"Error: '{order_file}' file not found.")
 
-    # Generate a unique bill ID (random alphanumeric string)
-    bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
+def update_order_status(order_file='order.txt', order_number='', new_status=''):
+    """
+    Updates the status of a specific order identified by order number in the order file.
+    """
+    try:
+        with open(order_file, 'r') as file:
+            lines = file.readlines()
 
-    # Get current date and time
-    now = datetime.now()
-    date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+        updated_lines = []
+        found_order = False
+        order_started = False
 
-    # Print the receipt on screen
-    print("\n--- RECEIPT ---")
-    print("DATA INTO BAKERY SDN.BHD")
-    print(f"WELCOME {customer_name}")
-    print(f"Bill ID: {bill_id}")
-    print(f"Date: {date_time}")
-    print("-" * 40)
-    print(f"Customer Name: {customer_name}")
-    print("Order Summary:")
-    for order in items_bought:
-        print(order)
-    print(f"Total: RM{total:.2f}")
-    print("-" * 40)
-    print(f"--- THANK YOU {customer_name}, SEE YOU NEXT TIME! ---")
+        for line in lines:
+            if f"Order Number: {order_number}" in line:
+                found_order = True
+                order_started = True  
+                updated_lines.append(line)  
+            elif found_order and 'Order Status:' in line:
+                updated_lines.append(f"Order Status: {new_status}\n")
+                found_order = False  
+            else:
+                updated_lines.append(line)
 
-    # Write the receipt to a file
-    write_receipt(customer_name, items_bought, total, bill_id, date_time, quantity_sold)
+        if order_started and not found_order:
+            with open(order_file, 'w') as file:
+                file.writelines(updated_lines)
+            print(f"Order {order_number}'s status has been updated to '{new_status}'.")
+        else:
+            print(f"Order {order_number} not found.")
+    
+    except FileNotFoundError:
+        print(f"Error: '{order_file}' file not found.")
 
-# Write receipt to a text file
-def write_receipt(customer_name, items_bought, total, bill_id, date_time, quantity_sold, receipt_file='cus_recp.txt'):
-    with open(receipt_file, mode='a') as file:
+def print_pending_orders(order_file='order.txt'):
+    """
+    Prints orders that are not marked as 'Completed'.
+    """
+    try:
+        with open(order_file, 'r') as file:
+            lines = file.readlines()
+
+        current_order = {}
+        orders = []
+        
+        for line in lines:
+            line = line.strip()
+            if not line:  
+                if current_order:
+                    orders.append(current_order)
+                    current_order = {}
+                continue
+
+            if 'Order Number:' in line:
+                current_order['OrderNumber'] = line.split(': ')[1]
+            elif 'Order Status:' in line:
+                current_order['Status'] = line.split(': ')[1]
+            elif any(char.isdigit() for char in line) and 'Total' not in line:
+                parts = line.split(' x ')
+                if len(parts) == 2:
+                    product_details = parts[0].rsplit(',', 1)
+                    if len(product_details) == 2:
+                        product_name = product_details[0].split(' ', 1)[1].strip()
+                        quantity = int(parts[1].strip())
+                        if 'Items' not in current_order:
+                            current_order['Items'] = []
+                        current_order['Items'].append({
+                            'ProductName': product_name,
+                            'Quantity': quantity
+                        })
+            elif 'Total:' in line:
+                current_order['Total'] = float(line.split('RM')[1].strip())
+            else:
+                if 'CustomerName' not in current_order:
+                    current_order['CustomerName'] = line
+
+        if current_order:
+            orders.append(current_order)
+
+        print("\n--- PENDING ORDERS ---")
+        for order in orders:
+            if order['Status'] != 'Completed':
+                print(f"Order Number: {order['OrderNumber']}, Status: {order['Status']}")
+                print(f"Customer Name: {order['CustomerName']}")
+                print("Items:")
+                for item in order['Items']:
+                    print(f"  {item['Quantity']} x {item['ProductName']}")
+                print(f"Total: RM{order['Total']:.2f}")
+                print("-" * 30)
+        print("-" * 30)
+
+    except FileNotFoundError:
+        print(f"Error: '{order_file}' file not found.")
+
+def write_receipt(customer_name, items_bought, total, bill_id, date_time, receipt_file='cus_recp.txt'):
+    with open(receipt_file, 'a') as file:
         file.write("\n--- RECEIPT ---\n")
-        file.write("DATA INTO BAKERY SDN.BHD\n")
+        file.write(f"DATA INTO BAKERY SDN.BHD\n")
         file.write(f"WELCOME {customer_name}\n")
         file.write(f"Bill ID: {bill_id}\n")
         file.write(f"Date: {date_time}\n")
@@ -127,77 +259,41 @@ def write_receipt(customer_name, items_bought, total, bill_id, date_time, quanti
         file.write(f"Customer Name: {customer_name}\n")
         file.write("Order Summary:\n")
         for order in items_bought:
-            file.write(order + '\n')
+            file.write(order + "\n")
         file.write(f"Total: RM{total:.2f}\n")
         file.write("-" * 40 + "\n")
-        file.write(f"--- THANK YOU {customer_name}, SEE YOU NEXT TIME! ---\n\n")
-        
-        # Log quantities sold
-        for product, quantity in quantity_sold.items():
-            file.write(f"{product}: {quantity} sold\n")
+        file.write(f"--- THANK YOU {customer_name}, SEE YOU NEXT TIME! ---\n")
 
-# Generate sales report
-def generate_report(menu):
-    print("\nSales Report")
-    for item in menu['items']:
-        print(f"{item['ProductName']} - Remaining Stock: {item['stocksAmount']}")
-
-# Generate sales performance report
-def generate_sales_performance_report(receipt_file='cus_recp.txt'):
-    sales_data = {}
-    
-    try:
-        with open(receipt_file, 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if "sold" in line:
-                    product_info = line.split(': ')
-                    if len(product_info) == 2:
-                        product_name = product_info[0]
-                        quantity_sold = int(product_info[1].strip().replace(' sold', ''))  # Remove ' sold' before converting to int
-                        if product_name in sales_data:
-                            sales_data[product_name] += quantity_sold
-                        else:
-                            sales_data[product_name] = quantity_sold
-
-        print("\nSales Performance Report")
-        print('-' * 40)
-        for product, quantity in sales_data.items():
-            print(f"{product}: {quantity} sold")
-        print('-' * 40)
-
-    except FileNotFoundError:
-        print(f"Error: '{receipt_file}' file not found.")
-
-# Main function to operate the system
 def main():
-    data = load_csv()  # Load the menu from the CSV
+    menu = load_csv()
     
     while True:
-        print("\nBakery Management System - Cashier")
+        print("\n--- Bakery Management System ---")
         print("1. Display Menu")
-        print("2. Manage Discount")
-        print("3. Complete Transaction")
-        print("4. Generate Sales Report")
-        print("5. Generate Sales Performance Report")
+        print("2. Manage Discounts")
+        print("3. Generate Receipt")
+        print("4. Print Pending Orders")
+        print("5. Update Order Status")
         print("6. Exit")
-        choice = input("Enter your choice: ")
-        
+        choice = input("Choose an option: ")
+
         if choice == '1':
-            display_menu(data)  # Pass the menu data to the function
+            display_menu(menu)
         elif choice == '2':
-            manage_discount(data)
+            manage_discount(menu)
         elif choice == '3':
-            complete_transaction(data)
+            generate_receipt()  
         elif choice == '4':
-            generate_report(data)
+            print_pending_orders()  
         elif choice == '5':
-            generate_sales_performance_report()  # Generate the sales performance report
+            order_number = input("Enter the Order Number to update: ")
+            new_status = input("Enter the new status (e.g., Completed): ")
+            update_order_status(order_number=order_number, new_status=new_status)
         elif choice == '6':
-            print("Exiting system...")
+            print("Exiting the system.")
             break
         else:
-            print("Invalid choice. Please try again.")
+            print("Invalid choice, please try again.")
 
 if __name__ == "__main__":
     main()
