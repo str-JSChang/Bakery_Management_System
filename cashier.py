@@ -10,7 +10,7 @@ def load_csv():
             lines = file.readlines()
             header = lines[0].strip().split(',')  
             
-            if header != ['ProductNumber' , 'ProductName', 'category', 'price' , 'stocksAmount']:
+            if header != ['ProductNumber', 'ProductName', 'category', 'price', 'stocksAmount']:
                 print(f"Warning: Unexpected header format in {menu_file}")
                 return menu 
 
@@ -18,14 +18,13 @@ def load_csv():
                 line = line.strip()
                 if line:
                     parts = line.split(',')
-
                     if len(parts) == 5:
                         menu['items'].append({ 
-                            'ProductNumber' : parts[0].strip(),
-                            'ProductName' : parts[1].strip(),
-                            'category' : parts[2].strip(),
-                            'price' : float(parts[3].replace('RM', '').strip()),
-                            'stocksAmount' : int(parts[4].strip())
+                            'ProductNumber': parts[0].strip(),
+                            'ProductName': parts[1].strip(),
+                            'category': parts[2].strip(),
+                            'price': float(parts[3].replace('RM', '').strip()),
+                            'stocksAmount': int(parts[4].strip())
                         })
                     else:
                         print(f"Warning: Invalid format in menu file line: {line}")
@@ -45,14 +44,14 @@ def display_menu(menu):
         product_number = item.get('ProductNumber').strip()
         product_name = item.get('ProductName').strip()
         category = item.get('category').strip()
-        price = item.get('price').strip()
-        stock = item.get('stocksAmount').strip()
+        price = item.get('price')
+        stock = item.get('stocksAmount')
         
         print(
             f"{product_number: <15}"
             f"{product_name: <35}"
             f"{category: <15}"
-            f"{price: <10}"
+            f"RM{price: <10.2f}"
             f"{stock: <10}"
         )
     
@@ -71,7 +70,6 @@ def manage_discount(menu):
             break
     else:
         print("Product not found!")
-
 
 def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
     print("Would you like to:")
@@ -99,7 +97,6 @@ def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
                 if processing_order:
                     if 'Order Status:' in line:
                         order_status = line.split(': ')[1].strip().lower()
-
                     
                     elif any(char.isdigit() for char in line) and 'Total' not in line:
                         parts = line.split(',')
@@ -125,7 +122,7 @@ def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
                     date_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
                     print_receipt(customer_name, items_brought, total, bill_id, date_time)
-                    save_recp_file(customer_name, items_brought, total, bill_id, date_time, receipt_file)
+                    save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
                     update_order_status(order_number, 'Completed', order_file)
                     print(f"Order {order_number}'s status updated to 'Completed'.")
                 elif order_status == 'cancelled':
@@ -144,9 +141,6 @@ def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
         print("Invalid choice. Please enter 1 or 2.")
 
 def print_receipt(customer_name, items_bought, total, bill_id, date_time):
-    """
-    Print the recipt details to the console
-    """
     print("\n--- RECEIPT ---")
     print("DATA INTO BAKERY SDN.BHD")
     print(f"Bill ID: {bill_id}")
@@ -160,9 +154,6 @@ def print_receipt(customer_name, items_bought, total, bill_id, date_time):
     print(f"--- THANK YOU {customer_name}, SEE YOU NEXT TIME! ---")
 
 def save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file):
-    """
-    Save the receipt to a file
-    """
     with open(receipt_file, 'a') as file:
         file.write("\n--- RECEIPT ---\n")
         file.write("DATA INTO BAKERY SDN.BHD\n")
@@ -174,6 +165,7 @@ def save_recp_file(customer_name, items_bought, total, bill_id, date_time, recei
             file.write(f"{item}\n")
         file.write(f"Total: RM{total:.2f}\n")
         file.write("--- THANK YOU, SEE YOU NEXT TIME! ---\n")
+
 def update_order_status(order_number, new_status, order_file='order.txt'):
     try:
         with open(order_file, 'r') as file:
@@ -189,33 +181,102 @@ def update_order_status(order_number, new_status, order_file='order.txt'):
     except Exception as e:
         print(f"An error occurred while updating the order status: {e}")
 
+def generate_reports(order_file='order.txt'):
+    try:
+        with open(order_file, 'r') as file:
+            lines = file.readlines()
+
+        sales_data = {}
+        current_order = {}
+
+        for line in lines:
+            line = line.strip()
+            if not line:  
+                if current_order:
+                    for item in current_order.get('Items', []):
+                        product_name = item['ProductName']
+                        quantity = item['Quantity']
+
+                        if product_name not in sales_data:
+                            sales_data[product_name] = {'total_sales': 0.0, 'order_count': 0}
+                        
+                        sales_data[product_name]['total_sales'] += item['Price'] * quantity
+                        sales_data[product_name]['order_count'] += quantity
+
+                    current_order = {}
+                continue
+
+            if 'Order Number:' in line:
+                current_order['OrderNumber'] = line.split(': ')[1]
+            elif 'Order Status:' in line:
+                current_order['Status'] = line.split(': ')[1]
+            elif any(char.isdigit() for char in line) and 'Total' not in line:
+                parts = line.split(',')
+                if len(parts) >= 2:
+                    quantity_and_product = parts[0].strip()
+                    product_name = quantity_and_product.split(',')[0].strip()  
+                    quantity = int(quantity_and_product.split()[0])  
+
+                    price = float(parts[1].replace('RM', '').strip().split('x')[0])  
+                    current_order.setdefault('Items', []).append({
+                        'ProductName': product_name,
+                        'Quantity': quantity,
+                        'Price': price
+                    })
+
+            elif 'Total:' in line:
+                current_order['Total'] = float(line.split('RM')[1].strip())
+                if current_order:
+                    for item in current_order.get('Items', []):
+                        product_name = item['ProductName']
+                        quantity = item['Quantity']
+
+                        if product_name not in sales_data:
+                            sales_data[product_name] = {'total_sales': 0.0, 'order_count': 0}
+                        
+                        sales_data[product_name]['total_sales'] += item['Price'] * quantity
+                        sales_data[product_name]['order_count'] += quantity
+                    
+                    current_order = {}
+
+        print("\n--- SALES PERFORMANCE REPORT ---")
+        print(f"{'ProductName': <35}{'Total Sales (RM)': <20}{'Order Count': <15}")
+        print("-" * 70)
+        
+        for product, data in sales_data.items():
+            print(f"{product: <35}{data['total_sales']:<20.2f}{data['order_count']:<15}")
+
+    except FileNotFoundError:
+        print(f"Error: '{order_file}' file not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 def main():
     menu = load_csv()
     
     while True:
-        print("\n--- Bakery Management System: Cashier Page ---")
+        print("Welcome to the Bakery Management System")
         print("1. Display Menu")
         print("2. Manage Discounts")
         print("3. Generate Receipt")
-        print("4. Update Order Status")
+        print("4. Generate Sales Reports")
         print("5. Exit")
-        choice = input("Choose an option: ")
-
+        
+        choice = input("Choose an option (1-5): ")
+        
         if choice == '1':
             display_menu(menu)
         elif choice == '2':
             manage_discount(menu)
         elif choice == '3':
-            generate_receipt()  
+            generate_receipt()
         elif choice == '4':
-            order_number = input("Enter the Order Number to update: ")
-            new_status = input("Enter the new status (e.g., Completed): ")
-            update_order_status(order_number=order_number, new_status=new_status)
+            generate_reports()
         elif choice == '5':
-            print("Exiting the system.")
+            print("Exiting system.")
             break
         else:
             print("Invalid choice, please try again.")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
