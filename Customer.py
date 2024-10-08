@@ -272,7 +272,9 @@ def cart_page(username):
                         item_part = item.split("RM")[-1] # split item_details into 2 parts and take second part
                         # 1: ['4 Chocolate Chips Cream Bun ', '3.00 x 3'], 2: '3.00 x 3'
                         
-                        price, quantity = map(str.strip, item_part.split("x")) # not allowed to use map function
+                        item_part_split = item_part.split("x")
+                        price = item_part_split[0].strip() # extract price from item part and remove spaces
+                        quantity = item_part_split[1].strip() # extract quantity and remove spaces
                         # price = '3.00', quantity = '3'
                         price = float(price)
                         quantity = int(quantity)
