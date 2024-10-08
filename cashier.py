@@ -1,37 +1,24 @@
 import random
 from datetime import datetime
 
-def load_csv():
-    menu_file = 'menu.csv'   
+def load_csv(file_path='menu.csv'): 
     menu = {'items': []}
-    
     try:
-        with open(menu_file, 'r') as file:
-            lines = file.readlines()
-            header = lines[0].strip().split(',')  
-            
-            if header != ['ProductNumber', 'ProductName', 'category', 'price', 'stocksAmount']:
-                print(f"Warning: Unexpected header format in {menu_file}")
-                return menu 
+        with open(file_path, 'r') as file:
+            for line in file.readlines()[1:]:  
+                product_number, product_name, category, price, stock = line.strip().split(',')
+                menu['items'].append({
+                    'ProductNumber': product_number.strip(),
+                    'ProductName': product_name.strip(),
+                    'category': category.strip(),
+                    'price': float(price.replace('RM', '').strip()),  
+                    'stocksAmount': int(stock.strip())
+                })
+    except Exception as e:
+        print(f"Error loading menu: {e}")
+        return None
 
-            for line in lines[1:]:
-                line = line.strip()
-                if line:
-                    parts = line.split(',')
-                    if len(parts) == 5:
-                        menu['items'].append({ 
-                            'ProductNumber': parts[0].strip(),
-                            'ProductName': parts[1].strip(),
-                            'category': parts[2].strip(),
-                            'price': float(parts[3].replace('RM', '').strip()),
-                            'stocksAmount': int(parts[4].strip())
-                        })
-                    else:
-                        print(f"Warning: Invalid format in menu file line: {line}")
-
-    except FileNotFoundError:
-        print(f"Error: '{menu_file}' file not found")
-        return menu
+    return menu
 
 def display_menu(menu):
     items = menu['items']
@@ -71,7 +58,7 @@ def manage_discount(menu):
     else:
         print("Product not found!")
 
-def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
+def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt'):
     print("Would you like to:")
     print("1. Print a receipt for an online order (existing order).")
     print("2. Create a new order.")
@@ -84,7 +71,7 @@ def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
             with open(order_file, 'r') as file:
                 lines = file.readlines()
 
-            customer_name, order_status, items_brought, total = None, None, [], 0.0
+            customer_name, order_status, items_bought, total = None, None, [], 0.0
             processing_order = False
 
             for i, line in enumerate(lines):
@@ -109,7 +96,7 @@ def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
 
                             price = float(product_price.replace('RM', '').strip().split('x')[0])  
 
-                            items_brought.append(f"{quantity} * {product_name} - RM{price * quantity:.2f}")
+                            items_bought.append(f"{quantity} * {product_name} - RM{price * quantity:.2f}")
 
                     elif 'Total:' in line:
                         total = float(line.split('RM')[1].strip())
@@ -121,7 +108,7 @@ def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
                     now = datetime.now()
                     date_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-                    print_receipt(customer_name, items_brought, total, bill_id, date_time)
+                    print_receipt(customer_name, items_bought, total, bill_id, date_time)
                     save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
                     update_order_status(order_number, 'Completed', order_file)
                     print(f"Order {order_number}'s status updated to 'Completed'.")
@@ -136,7 +123,52 @@ def generate_receipt(order_file='order.txt', receipt_file='cus_recp.txt'):
             print(f"An error occurred: {e}")
 
     elif choice == '2':
-        print("Create a new order functionality goes here.")
+        # New order functionality
+        customer_name = input("Enter customer's name: ")
+        items_bought = []
+        total = 0.0
+        
+        while True:
+            product_number = input("Enter Product Number (or type 'done' to finish): ").strip()
+            if product_number.lower() == 'done':
+                break
+            
+            quantity = int(input(f"Enter quantity for product number {product_number}: "))
+            
+            product_found = False
+            for item in menu['items']:
+                if item['ProductNumber'] == product_number:
+                    product_name = item['ProductName']
+                    price = item['price']
+                    stock = item['stocksAmount']
+                    
+                    if quantity > stock:
+                        print(f"Insufficient stock for {product_name}. Only {stock} left.")
+                    else:
+                        item['stocksAmount'] -= quantity
+                        total += price * quantity
+                        items_bought.append(f"{quantity} * {product_name} - RM{price * quantity:.2f}")
+                        product_found = True
+                    break
+
+            if not product_found:
+                print(f"Product with Product Number {product_number} not found.")
+        
+        # Ask if a discount should be applied
+        discount_choice = input("Would you like to apply a discount? (yes or no): ").strip().lower()
+        if discount_choice == 'yes':
+            discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
+            total = total - total * (discount / 100)
+            print(f"Discount of {discount}% applied. New total is RM{total:.2f}")
+
+        # Generate and print the receipt
+        bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
+        now = datetime.now()
+        date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+        
+        print_receipt(customer_name, items_bought, total, bill_id, date_time)
+        save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
+
     else:
         print("Invalid choice. Please enter 1 or 2.")
 
@@ -251,6 +283,49 @@ def generate_reports(order_file='order.txt'):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def calculate_total_sales(order_file='order.txt'):
+    total_sales = 0.0
+    
+    try:
+        with open(order_file, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                if 'Total:' in line:
+                    total_sales += float(line.split('RM')[1].strip())
+    except FileNotFoundError:
+        print(f"Error: '{order_file}' file not found.")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+    return total_sales
+
+def calculate_profit(order_file='order.txt', inventory_file='inventory_cost.txt'):
+    sales_total = calculate_total_sales(order_file)
+    
+    if sales_total is None:
+        return None  
+    
+    inventory_cost = 0
+    
+    try:
+        with open(inventory_file, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                if 'RM' in line and 'Total' not in line:
+                    cost = float(line.split('RM')[1].strip())
+                    inventory_cost += cost
+                elif 'Total' in line:
+                    total_cost = float(line.split('RM')[1].strip())
+                    break
+    except FileNotFoundError:
+        print(f"Error: '{inventory_file}' file not found.")
+        return None
+
+    profit = sales_total - inventory_cost
+    return profit
+
 def main():
     menu = load_csv()
     
@@ -260,20 +335,25 @@ def main():
         print("2. Manage Discounts")
         print("3. Generate Receipt")
         print("4. Generate Sales Reports")
-        print("5. Exit")
+        print("5. Calculate The Total Profit")
+        print("6. Exit Cashier Page")
         
-        choice = input("Choose an option (1-5): ")
+        choice = input("Choose an option (1-6): ")
         
         if choice == '1':
             display_menu(menu)
         elif choice == '2':
             manage_discount(menu)
         elif choice == '3':
-            generate_receipt()
+            generate_receipt(menu)
         elif choice == '4':
             generate_reports()
         elif choice == '5':
-            print("Exiting system.")
+            profit = calculate_profit()  
+            if profit is not None:
+                print(f"Profit: RM{profit:.2f}")
+        elif choice == '6':
+            print("Exiting Bakery System: Cashier Page...")
             break
         else:
             print("Invalid choice, please try again.")
