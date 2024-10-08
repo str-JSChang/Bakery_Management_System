@@ -1,6 +1,7 @@
 import hashlib
 import random
 
+# this function will be delete after import Customer into main
 def validate_email():
     while True:
         email = input("Please enter your email address: ").strip()
@@ -17,9 +18,9 @@ def update_acc():
     old_username = input("Enter your current username: ")
     old_password = input("Enter your current password: ")
 
-    hashed_old_pw = hashlib.md5(old_password.encode()).hexdigest()
+    hashed_old_password = hashlib.md5(old_password.encode()).hexdigest()
     
-    cus_found = False
+    customer_found = False
     customers = []
     
     try: 
@@ -29,8 +30,8 @@ def update_acc():
             for line in lines[1:]: # ignore the first line (title line)
                 name, email, user_name, password, role = line.strip().split(',')
                 # If username and password match, update user details
-                if user_name == old_username and password == hashed_old_pw:
-                    cus_found = True
+                if user_name == old_username and password == hashed_old_password:
+                    customer_found = True
                     print(f"Update {old_username}'s Account.")
                     user_name = input("Enter new username: ")
 
@@ -50,7 +51,7 @@ def update_acc():
         print("'customer_data.csv' file not found.")
         return
 
-    if cus_found:
+    if customer_found:
         # Overwrite the file using updated cus list
         with open("customer_data.csv", "w", newline='') as file:
             file.write("Name,Email,Username,Password,Role\n")
@@ -267,14 +268,16 @@ def cart_page(username):
                 for item in customer_cart:
                     if item.startswith(str(remove_num)):
                         # get price and quantity from item inside cart
-                        product_part = item.split()
+                        product_part = item.split() #['4', 'Chocolate', 'Chips', 'Cream', 'Bun', 'RM3.00', 'x', '3']
                         item_part = item.split("RM")[-1] # split item_details into 2 parts and take second part
+                        # 1: ['4 Chocolate Chips Cream Bun ', '3.00 x 3'], 2: '3.00 x 3'
                         
-                        price, quantity = map(str.strip, item_part.split("x")) # split 'x', then map p and q values
+                        price, quantity = map(str.strip, item_part.split("x")) # not allowed to use map function
+                        # price = '3.00', quantity = '3'
                         price = float(price)
                         quantity = int(quantity)
 
-                        product_name = " ".join(product_part[1:-3])
+                        product_name = " ".join(product_part[1:-3]) # Ignore number and price x quantity
 
                         remove_qty = int(input("Enter the quantity to remove: "))
                         
@@ -334,10 +337,10 @@ def cart_page(username):
 
 
 def order(username):
-    cus_cart = False # check for cart existance
-    status_check = False # check for 'order placed' status
+    order_exist = False # check for cart existance
+    status_check = False # check for 'order placed' status (becus we also have 'cancelled')
     order_found = False
-    order_num = None
+    order_number = None
     with open('order.txt', 'r') as file:
         lines = file.readlines()
 
@@ -356,10 +359,10 @@ def order(username):
         if order_input == 1:
             for line in lines:
                 if line.strip() == username: # find username's cart
-                    cus_cart = True
+                    order_exist = True
                     status_check = False
 
-                if cus_cart and "Order Status: order placed" in line:
+                if order_exist and "Order Status: order placed" in line:
                     status_check = True
                     order_found = True
                     print("-"*50)
@@ -370,20 +373,20 @@ def order(username):
                 if status_check:
                     print(line.strip())
                     if line.startswith("Order Number: "): #search for order number
-                        order_num = line.strip().split(": ")[1]
+                        order_number = line.strip().split(": ")[1]
                     if line.startswith("Total: "): # stop printing when reach last line
                         print("\n" + "-"*50)
                         status_check = False
-                        cus_cart = False
+                        order_exist = False
                         continue
 
             if order_found:
-                    cancel = input("Would you like to cancel your order?(yes/no): ")
+                    cancel_order_input = input("Would you like to cancel your order?(yes/no): ")
 
-                    if cancel.lower() == "yes":
+                    if cancel_order_input.lower() == "yes":
                         input_num = input("Enter order number you want to cancel: ")
 
-                        if input_num == order_num:
+                        if input_num == order_number:
                             with open('order.txt','w') as file:
                                 ignore_order = False
                                 for line in lines:
@@ -403,13 +406,10 @@ def order(username):
                                 print(f"**Your order {input_num} has been cancelled successfully.**")
                         else:
                             print("Order not found. Please check order number.")
-                    elif cancel.lower()=="no":
+                    elif cancel_order_input.lower()=="no":
                         print("\t**Baker is preparing your order.**")
                     else:
                         print("Invalid input, please type 'yes' or 'no'.")
-
-            if not order_found:
-                print(f"**No order found for {username}, please check in shopping cart 'check out'.**")
 
         if order_input == 2:
             with open('completed_order.txt', 'r') as file:
@@ -419,11 +419,66 @@ def order(username):
             print("Exiting My Order...")
             break
 
-def feedback():
-    pass
+def feedback(username):
+    completed_orders = []
 
+    with open('completed_order.txt','r') as file:
+        lines = file.readline()
 
-def main_cus_page(username):
+        order_found = False
+        username_orders = []
+
+        for line in lines:
+            if line.strip() == username:
+                order_found = True
+                username_orders.append(line.strip())
+            elif order_found:
+                username_orders.append(line.strip())
+                if line.startswith("Total: "):
+                    completed_orders.append()
+                    username_orders = []
+                    order_found = False
+        
+        if not completed_orders:
+            print("**You have no completed order.**")
+            return
+        
+        print("-"*50 + "\n" + f"{username}'s Completed Orders: ")
+        for order in completed_orders:
+            print("\n".join(order))
+            print("-"*50)
+
+        order_number = input("\nEnter the order number you want to leave feedback: ")
+
+        # check if user give feedback for the currrent order
+        feedback_given = False
+        with open('feedback.txt', 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                if username in line and f"Order Number: {order_number}" in line:
+                    feedback_given = True
+                    break
+        
+        if feedback_given:
+            print("Feedback already provided for this order.")
+            return
+        
+        # Rating from 1-5
+        while True:
+            rating = input("Please rate your order (1-5): ")
+            if rating.isdigit() and 1 <= float(rating) <= 5:
+                break
+            else:
+                print("Invalid rating. Please enter a number between 1 and 5.")
+            
+        comment = input("Please provide your feedback: ")
+
+        with open('feedback.txt', 'a') as file:
+            file.write(f"{username}\nOrder Number: {order_number}\nRating: {rating}\nFeedback: {comment}\n\n")
+
+        print("Thank you for your feedback!")
+
+def main_customer_page(username):
     while True:
         print("-"*50 + "\n\t" + f"Welcome, {username.upper()}.\n"+ "-"*50)
         print("1. Update Account")
@@ -456,5 +511,5 @@ def main_cus_page(username):
             break
 
 if __name__ == "__main__":
-    username = "Chong"  # storing customer username (testing purpose)
-    main_cus_page(username)
+    username = "Jason Liew"  # storing customer username (testing purpose)
+    main_customer_page(username)
