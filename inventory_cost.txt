@@ -1,0 +1,11 @@
+Inventory Cost
+Flour RM100
+Egg RM120
+Sugar RM45
+Fruit RM100
+Yeast RM20
+Chocolate chips RM30
+Whipping cream Rm75
+
+Total : RM490
+
