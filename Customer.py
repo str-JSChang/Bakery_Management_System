@@ -13,7 +13,7 @@ def validate_email():
             print("Invalid email. Please use a valid domain. eg: (@gmail.com).")
 
 
-def update_acc():
+def update_account():
     # Validate old username and password first
     old_username = input("Enter your current username: ")
     old_password = input("Enter your current password: ")
@@ -87,7 +87,10 @@ def cart_page(username):
             if line.strip() == username:  # If the username is found
                 cart_found = True
                 continue  # without add the username to the list
-                
+            
+            if "Order Status: in-cart" in line:
+                continue # without adding status
+
             if cart_found:
                 if line.strip() == "":  # Break when reach empty line
                     break
@@ -186,7 +189,7 @@ def cart_page(username):
             file.writelines(new_lines)
 
             
-    def check_out(username):
+    def place_order(username):
         cus_cart = False
         customer_cart = []
         with open('cart.txt', 'r') as file:
@@ -205,7 +208,7 @@ def cart_page(username):
                     break
 
         if cus_cart:
-            order = input("Would you like to check out?(yes/no): ")
+            order = input("Would you like to place order?(yes/no): ")
             if order.lower() == "yes":
                 with open('order.txt','a') as file:
                     file.write(f"{username}\n")
@@ -230,7 +233,7 @@ def cart_page(username):
             print("Your cart is empty.")
 
 
-    def remove_cart(username):
+    def remove_cart_item(username):
         customer_cart = find_cart(username)
 
         if not customer_cart:
@@ -251,18 +254,19 @@ def cart_page(username):
             print("#3 Type 'q' to quit.")
             print("-" * 55)
 
-            cus_input = input("Enter the number of item to remove from cart: ")
+            customer_input = input("Enter the number of item to remove from cart: ")
 
-            if cus_input.lower() == 'q':
+            if customer_input.lower() == 'q':
                 print("Exiting...")
                 break
 
-            elif cus_input.lower() == "clear":
+            elif customer_input.lower() == "clear":
                 clear_cart(username)
+                print("Your cart has been cleared...")
                 break
 
-            elif cus_input.isdigit():
-                remove_num = int(cus_input)
+            elif customer_input.isdigit():
+                remove_num = int(customer_input)
                 item_found = False
 
                 for item in customer_cart:
@@ -281,22 +285,22 @@ def cart_page(username):
 
                         product_name = " ".join(product_part[1:-3]) # Ignore number and price x quantity
 
-                        remove_qty = int(input("Enter the quantity to remove: "))
+                        remove_quantity = int(input("Enter the quantity to remove: "))
                         
                         item_found = True
-                        if remove_qty > quantity:
+                        if remove_quantity > quantity:
                             print("You cannot remove more than you have.")
                             continue
                         
-                        if remove_qty == quantity:
+                        if remove_quantity == quantity:
                             customer_cart.remove(item)
                             total_bill -= price * quantity
                             print(f"Removed all {quantity} of {product_name}.")
                         else:
-                            new_qty = quantity - remove_qty
-                            updated_item = f"{remove_num}  {product_name} RM{price:.2f} x {new_qty}"
+                            new_quantity = quantity - remove_quantity
+                            updated_item = f"{remove_num}  {product_name} RM{price:.2f} x {new_quantity}"
                             customer_cart[customer_cart.index(item)] = updated_item
-                            total_bill -= price * remove_qty
+                            total_bill -= price * remove_quantity
 
                             print("-"*50 + f"\nItems in {username}'s cart:") # display current user cart
                             for item in customer_cart:
@@ -308,6 +312,7 @@ def cart_page(username):
 
                         with open('cart.txt', 'a') as file:
                             file.write(f"{username}\n")
+                            file.write(f"Order Status: in-cart\n")
                             for item in customer_cart:
                                 file.write(f"{item}\n")
                             file.write(f"Total: RM{total_bill:.2f}\n\n")
@@ -330,9 +335,9 @@ def cart_page(username):
         if choice == "1":
             update_cart(username)
         elif choice == "2":
-            remove_cart(username)
+            remove_cart_item(username)
         elif choice == "3":
-            check_out(username)
+            place_order(username)
         elif choice == "4":
             print("Return to main customer page...")
             break
@@ -501,7 +506,7 @@ def main_customer_page(username):
                 print("Invalid input. Please enter integer number between 1-5.")
 
         if choice == 1:
-            update_acc()
+            update_account()
         elif choice == 2:
             cart_page(username)
         elif choice == 3:
@@ -513,5 +518,5 @@ def main_customer_page(username):
             break
 
 if __name__ == "__main__":
-    username = "Jason Liew"  # storing customer username (testing purpose)
+    username = "JiniJin"  # storing customer username (testing purpose)
     main_customer_page(username)
