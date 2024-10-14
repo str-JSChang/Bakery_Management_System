@@ -58,7 +58,7 @@ def store_menu():
                 menu_items = remove_menu_item(menu_items)
             elif choice == 5:
                 print("Returning to Baker's Menu...")
-                baker_menu()
+                return
             else:
                 print("Please enter a valid option between 1 to 5.")
         except ValueError:
