@@ -22,7 +22,7 @@ def baker_menu():
                 report_equipment()
             elif choice == 6:
                 print("Exiting Baker's Menu...")
-                baker_menu()
+                return
             else:
                 print("Please enter a valid option between 1 to 6.")
         except ValueError:
@@ -143,8 +143,12 @@ def manage_recipes():
         with open("recipes.txt", "r") as file:
             recipes = []
             for line in file:
-                name, ingredients, instructions = line.strip().split("/")
-                recipes.append([name, ingredients, instructions])
+                parts = line.strip().split("|")
+                if len(parts) >= 3:
+                    name = parts[0].strip()
+                    ingredients = parts[1].strip()
+                    instructions = "|".join(parts[2:]).strip()
+                    recipes.append([name, ingredients, instructions])
     except FileNotFoundError:
         print("Error: 'recipes.txt' file not found.")
         return
@@ -383,33 +387,101 @@ def remove_ingredient(inventory_items):
     print("Ingredient not found.")
     return inventory_items
 
+# Used inside get_valid_date function
+def validate_date(date_input):
+    try:
+        year, month, day = date_input.split('-')
+        year = int(year)
+        month = int(month)
+        day = int(day)
+        if year < 1000 or year > 9999:
+            return False
+        if month < 1 or month > 12:
+            return False
+        if day < 1 or day > 31:
+            return False
+        if month in [4, 6, 9, 11] and day > 30:
+            return False
+        if month == 2:
+            if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0):
+                if day > 29:
+                    return False
+            elif day > 28:
+                return False
+        return True
+    except ValueError:
+        return False
+
+def get_valid_date(prompt):
+    while True:
+        date = input(prompt)
+        if validate_date(date):
+            return date
+        else:
+            print("Invalid date format. Please use YYYY-MM-DD.")
+
 def record_production():
     print("----------Record Production Details----------")
-    date = input("Enter the production date (YYYY-MM-DD): ")
-    item = input("Enter the item produced: ")
-    quantity = input("Enter the quantity produced: ")
+    try:
+        date = get_valid_date("Enter the production date (YYYY-MM-DD): ")
+        item = input("Enter the item produced: ")
+        quantity = int(input("Enter the quantity produced: "))
+    except ValueError:
+        print("InputType Error:Please input integer on quantity,reprompting again...")
+        return record_production()
     
     production_details = f"{date},{item},{quantity}"
     
+    # record a log for production added
     try:
         with open("production_log.txt", "a") as file:
             file.write(production_details + "\n")
         print("Production details recorded successfully.")
+        
+        menu_items = []
+        with open("menu.csv", "r") as file:
+            menu_items = [line.strip().split(",") for line in file]
+        
+    # update the stock amount in menu.csv
+        for menu_item in menu_items[1:]:
+            if menu_item[1].lower() == item.lower():
+                current_stock = int(menu_item[4])
+                new_stock = current_stock + int(quantity)
+                menu_item[4] = str(new_stock)
+                
+                with open("menu.csv", "w", newline="") as file:
+                    for item in menu_items:
+                        file.write(",".join(item) + "\n")
+                print(f"Stock amount for {item} updated in menu.csv")
+                baker_menu()
+        else:
+            print(f"Warning: {item} not found in menu.csv. Stock not updated.")
     except:
-        print("Error occurred while recording production details.")
+        print("Error occurred while recording production or updating stock.")
 
 def report_equipment():
     print("----------Report Equipment Issues----------")
     equipment_name = input("Enter the name of the equipment: ")
     issue_description = input("Describe the issue: ")
     date_reported = input("Enter the date of the report (YYYY-MM-DD): ")
+    maintenance_cost = input("Enter the estimated cost of maintenance/repair (RM): ")
     
-    equipment_issue = f"{date_reported},{equipment_name},{issue_description}"
+    equipment_issue = f"{date_reported},{equipment_name},{issue_description},{maintenance_cost}"
     
     try:
+        try:
+            with open("equipment_issues.txt", "r") as file:
+                if file.readline().strip() != "Date,Equipment,Issue,Maintenance Cost (RM)":
+                    raise FileNotFoundError  # IF no file, then create a file haha
+        except FileNotFoundError:
+            with open("equipment_issues.txt", "w") as file:
+                file.write("Date,Equipment,Issue,Maintenance Cost (RM)\n")
+        
+        # Add issue
         with open("equipment_issues.txt", "a") as file:
             file.write(equipment_issue + "\n")
         print("Equipment issue reported successfully.")
+        baker_menu()
     except:
         print("Error occurred while reporting equipment issue.")
 
