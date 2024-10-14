@@ -13,33 +13,30 @@ def baker_menu():
             if choice == 1:
                 store_menu()
             elif choice == 2:
-                # Call manage_recipes() function
-                pass
+                manage_recipes()
             elif choice == 3:
-                # Call verify_ingredients() function
-                pass
+                inventory()
             elif choice == 4:
-                # Call record_production() function
-                pass
+                record_production()
             elif choice == 5:
-                # Call report_equipment() function
-                pass
+                report_equipment()
             elif choice == 6:
                 print("Exiting Baker's Menu...")
-                return
+                baker_menu()
             else:
                 print("Please enter a valid option between 1 to 6.")
         except ValueError:
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 6.")
 
-# Store Menu
 def store_menu():
     print("----------Store Menu----------")
     try:
-        with open("menu.txt", "r") as file:
-            menu_items = [line.strip().split(",") for line in file]
+        with open("menu.csv", "r") as file:
+            menu_items = []
+            for line in file:
+                menu_items.append(line.strip().split(","))
     except FileNotFoundError:
-        print("Error: 'your_file.txt' file not found.")
+        print("Error: 'menu.csv' file not found.")
         return
 
     while True:
@@ -61,7 +58,7 @@ def store_menu():
                 menu_items = remove_menu_item(menu_items)
             elif choice == 5:
                 print("Returning to Baker's Menu...")
-                return
+                baker_menu()
             else:
                 print("Please enter a valid option between 1 to 5.")
         except ValueError:
@@ -69,7 +66,7 @@ def store_menu():
 
 def save_menu(menu_items):
     try:
-        with open("menu.txt", "w", newline="") as file:
+        with open("menu.csv", "w", newline="") as file:
             for item in menu_items:
                 file.write(",".join(item) + "\n")
     except:
@@ -77,17 +74,23 @@ def save_menu(menu_items):
 
 def display_menu(menu_items):
     print("----------Current Menu----------")
-    for item in menu_items:
-        print(f"Item: {item[0]}, Price: {item[1]}")
+    print("ProductNumber,ProductName,category,price,stocksAmount")
+    for item in menu_items[1:]:  
+        print(",".join(item))
 
 def create_menu_item(menu_items):
     print("----------Create New Menu Item----------")
-    item_name = input("Enter the item name: ")
-    item_price = input("Enter the item price: ")
-    print(f"New item: {item_name}, Price: {item_price}")
+    product_number = str(int(menu_items[-1][0]) + 1)
+    product_name = input("Enter the product name: ")
+    category = input("Enter the category: ")
+    price = input("Enter the price (RM): ")
+    stocks_amount = input("Enter the stocks amount: ")
+    
+    new_item = [product_number, product_name, category, f"RM{price}", stocks_amount]
+    print(f"New item: {', '.join(new_item)}")
     confirm = input("Confirm to add this item? (y/n): ")
     if confirm.lower() == "y":
-        menu_items.append([item_name, item_price])
+        menu_items.append(new_item)
         print("Item added successfully.")
         save_menu(menu_items)
     else:
@@ -97,14 +100,17 @@ def create_menu_item(menu_items):
 def update_menu_item(menu_items):
     print("----------Update Existing Menu Item----------")
     display_menu(menu_items)
-    item_name = input("Enter the item name to update: ")
-    for item in menu_items:
-        if item[0] == item_name:
-            new_price = input(f"Enter the new price for {item[0]} (current: {item[1]}): ")
-            print(f"Updating {item[0]} - Price: {item[1]} -> {new_price}")
+    product_number = input("Enter the product number to update: ")
+    for item in menu_items[1:]:  # Skip header row using slicing by init the first index 0 to second index 1
+        if item[0] == product_number:
+            print(f"Updating {item[1]}")
+            item[1] = input(f"Enter new product name (current: {item[1]}): ") or item[1]
+            item[2] = input(f"Enter new category (current: {item[2]}): ") or item[2]
+            item[3] = input(f"Enter new price (current: {item[3]}): ") or item[3]
+            item[4] = input(f"Enter new stocks amount (current: {item[4]}): ") or item[4]
+            print(f"Updated item: {', '.join(item)}")
             confirm = input("Confirm the update? (y/n): ")
             if confirm.lower() == "y":
-                item[1] = new_price
                 print("Item updated successfully.")
                 save_menu(menu_items)
             else:
@@ -116,10 +122,10 @@ def update_menu_item(menu_items):
 def remove_menu_item(menu_items):
     print("----------Remove Menu Item----------")
     display_menu(menu_items)
-    item_name = input("Enter the item name to remove: ")
-    for item in menu_items:
-        if item[0] == item_name:
-            print(f"Removing {item[0]} - Price: {item[1]}")
+    product_number = input("Enter the product number to remove: ")
+    for item in menu_items[1:]:  
+        if item[0] == product_number:
+            print(f"Removing {item[1]} - Price: {item[3]}")
             confirm = input("Confirm the removal? (y/n): ")
             if confirm.lower() == "y":
                 menu_items.remove(item)
@@ -131,56 +137,84 @@ def remove_menu_item(menu_items):
     print("Item not found.")
     return menu_items
 
-
-
 def manage_recipes():
     print("----------Manage Recipes----------")
     try:
         with open("recipes.txt", "r") as file:
-            recipes = [line.strip().split(",") for line in file]
+            recipes = []
+            for line in file:
+                name, ingredients, instructions = line.strip().split("/")
+                recipes.append([name, ingredients, instructions])
     except FileNotFoundError:
         print("Error: 'recipes.txt' file not found.")
         return
 
     while True:
         print("1. View Recipes")
-        print("2. Create New Recipe")
+        print("2. Add New Recipe")
         print("3. Update Existing Recipe")
         print("4. Remove Recipe")
         print("5. Back to Baker's Menu")
-
+    
         try:
             choice = int(input("Please enter your selection (1-5): "))
             if choice == 1:
                 display_recipes(recipes)
             elif choice == 2:
-                recipes = create_recipe(recipes)
+                recipes = add_recipe(recipes)
             elif choice == 3:
                 recipes = update_recipe(recipes)
             elif choice == 4:
                 recipes = remove_recipe(recipes)
             elif choice == 5:
+                save_recipes(recipes)
                 print("Returning to Baker's Menu...")
-                return
+                baker_menu()
             else:
                 print("Please enter a valid option between 1 to 5.")
         except ValueError:
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 5.")
 
+def save_recipes(recipes):
+    try:
+        with open("recipes.txt", "w", newline="") as file:
+            for recipe in recipes:
+                file.write(f"{recipe[0]}/{recipe[1]}/{recipe[2]}\n")
+        print("Recipes saved successfully.")
+    except:
+        print("Error occurred while updating the recipes file.")
+
 def display_recipes(recipes):
     print("----------Current Recipes----------")
-    for recipe in recipes:
-        print(f"Name: {recipe[0]}, Ingredients: {recipe[1]}, Instructions: {recipe[2]}")
+    for i in range(len(recipes)):
+        print(f"{i+1}. {recipes[i][0]}")
+    
+    while True:
+        choice = input("Enter recipe number to view details (or 0 to go back): ")
+        if choice == '0':
+            break
+        try:
+            index = int(choice) - 1
+            if 0 <= index < len(recipes):
+                print(f"\nName: {recipes[index][0]}")
+                print(f"Ingredients: {recipes[index][1]}")
+                print(f"Instructions: {recipes[index][2]}")
+            else:
+                print("Invalid recipe number.")
+        except ValueError:
+            print("Please enter a valid number.")
 
-def create_recipe(recipes):
-    print("----------Create New Recipe----------")
-    recipe_name = input("Enter the recipe name: ")
-    recipe_ingredients = input("Enter the recipe ingredients (comma-separated): ")
-    recipe_instructions = input("Enter the recipe instructions: ")
-    print(f"New recipe: {recipe_name}, Ingredients: {recipe_ingredients}, Instructions: {recipe_instructions}")
+def add_recipe(recipes):
+    print("----------Add New Recipe----------")
+    name = input("Enter the recipe name: ")
+    ingredients = input("Enter the ingredients (comma-separated): ")
+    instructions = input("Enter the instructions: ")
+    
+    new_recipe = [name, ingredients, instructions]
+    print(f"New recipe: {', '.join(new_recipe)}")
     confirm = input("Confirm to add this recipe? (y/n): ")
     if confirm.lower() == "y":
-        recipes.append([recipe_name, recipe_ingredients, recipe_instructions])
+        recipes.append(new_recipe)
         print("Recipe added successfully.")
         save_recipes(recipes)
     else:
@@ -190,61 +224,194 @@ def create_recipe(recipes):
 def update_recipe(recipes):
     print("----------Update Existing Recipe----------")
     display_recipes(recipes)
-    recipe_name = input("Enter the recipe name to update: ")
-    for recipe in recipes:
-        if recipe[0] == recipe_name:
-            new_ingredients = input(f"Enter the new ingredients for {recipe[0]} (current: {recipe[1]}): ")
-            new_instructions = input(f"Enter the new instructions for {recipe[0]} (current: {recipe[2]}): ")
-            print(f"Updating {recipe[0]} - Ingredients: {recipe[1]} -> {new_ingredients}, Instructions: {recipe[2]} -> {new_instructions}")
+    recipe_number = input("Enter the recipe number to update: ")
+    try:
+        index = int(recipe_number) - 1
+        if 0 <= index < len(recipes):
+            recipe = recipes[index]
+            print(f"Updating {recipe[0]}")
+            recipe[0] = input(f"Enter new recipe name (current: {recipe[0]}): ") or recipe[0]
+            recipe[1] = input(f"Enter new ingredients (current: {recipe[1]}): ") or recipe[1]
+            recipe[2] = input(f"Enter new instructions (current: {recipe[2]}): ") or recipe[2]
+            print(f"Updated recipe: {', '.join(recipe)}")
             confirm = input("Confirm the update? (y/n): ")
             if confirm.lower() == "y":
-                recipe[1] = new_ingredients
-                recipe[2] = new_instructions
                 print("Recipe updated successfully.")
                 save_recipes(recipes)
             else:
                 print("Update cancelled.")
-            return recipes
-    print("Recipe not found.")
+        else:
+            print("Invalid recipe number.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
     return recipes
 
 def remove_recipe(recipes):
     print("----------Remove Recipe----------")
     display_recipes(recipes)
-    recipe_name = input("Enter the recipe name to remove: ")
-    for recipe in recipes:
-        if recipe[0] == recipe_name:
+    recipe_number = input("Enter the recipe number to remove: ")
+    try:
+        index = int(recipe_number) - 1
+        if 0 <= index < len(recipes):
+            recipe = recipes[index]
             print(f"Removing {recipe[0]}")
             confirm = input("Confirm the removal? (y/n): ")
             if confirm.lower() == "y":
-                recipes.remove(recipe)
+                new_recipes = []
+                for i in range(len(recipes)):
+                    if i != index:
+                        new_recipes.append(recipes[i])
+                recipes = new_recipes
                 print("Recipe removed successfully.")
                 save_recipes(recipes)
             else:
                 print("Removal cancelled.")
-            return recipes
-    print("Recipe not found.")
+        else:
+            print("Invalid recipe number.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
     return recipes
 
-def save_recipes(recipes):
+def inventory():
+    print("----------Inventory's Menu----------")
     try:
-        with open("recipes.txt", "w", newline="") as file:
-            for recipe in recipes:
-                file.write(",".join(recipe) + "\n")
-    except:
-        print("Error occurred while updating the recipes file.")
+        with open("inventory.csv", "r") as file:
+            inventory_items = []
+            for line in file:
+                if not line.startswith("Ingredients"):  
+                    item = line.strip().split(",")
+                    inventory_items.append(item)
+    except FileNotFoundError:
+        print("Error: 'inventory.csv' file not found.")
+        return
 
-def verify_ingredients():
-    print("----------Verify Ingredient Inventory----------")
-    # Code to verify ingredient inventory
-    pass
+    while True:
+        print("1. View Inventory")
+        print("2. Update Ingredient Cost")
+        print("3. Add New Ingredient")
+        print("4. Remove Ingredient")
+        print("5. Back to Baker's Menu")
+
+        try:
+            choice = int(input("Please enter your selection (1-5): "))
+            if choice == 1:
+                display_inventory(inventory_items)
+            elif choice == 2:
+                inventory_items = update_ingredient_cost(inventory_items)
+            elif choice == 3:
+                inventory_items = add_new_ingredient(inventory_items)
+            elif choice == 4:
+                inventory_items = remove_ingredient(inventory_items)
+            elif choice == 5:
+                save_inventory(inventory_items)
+                print("Returning to Baker's Menu...")
+                baker_menu()
+            else:
+                print("Please enter a valid option between 1 to 5.")
+        except ValueError:
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 5.")
+
+def save_inventory(inventory_items):
+    try:
+        with open("inventory.csv", "w", newline="") as file:
+            file.write("Ingredients,Cost (RM)\n")
+            for item in inventory_items:
+                file.write(f"{item[0]},{item[1]}\n")
+        print("Inventory updated successfully.")
+    except:
+        print("Error occurred while updating the inventory file.")
+
+def display_inventory(inventory_items):
+    print("----------Current Inventory----------")
+    print("Ingredients, Cost (RM)")
+    total_cost = 0
+    for item in inventory_items:
+        print(f"{item[0]}, {item[1]}")
+        total_cost += float(item[1])
+    print(f"\nTotal Inventory Cost: RM{total_cost:.2f}")
+
+def update_ingredient_cost(inventory_items):
+    print("----------Update Ingredient Cost----------")
+    display_inventory(inventory_items)
+    ingredient_name = input("Enter the ingredient name to update: ")
+    for item in inventory_items:
+        if item[0].lower() == ingredient_name.lower():
+            print(f"Current cost for {item[0]}: RM{item[1]}")
+            new_cost = input(f"Enter new cost (current: RM{item[1]}): ") or item[1]
+            item[1] = new_cost
+            print(f"Updated: {item[0]}, Cost: RM{item[1]}")
+            save_inventory(inventory_items)
+            return inventory_items
+    print("Ingredient not found.")
+    return inventory_items
+
+def add_new_ingredient(inventory_items):
+    print("----------Add New Ingredient----------")
+    ingredient = input("Enter the ingredient name: ")
+    cost = input("Enter the cost (RM): ")
+    new_item = [ingredient, cost]
+    print(f"New ingredient: {ingredient}, Cost: RM{cost}")
+    confirm = input("Confirm to add this ingredient? (y/n): ")
+    if confirm.lower() == "y":
+        inventory_items.append(new_item)
+        print("Ingredient added successfully.")
+        save_inventory(inventory_items)
+    else:
+        print("Ingredient addition cancelled.")
+    return inventory_items
+
+def remove_ingredient(inventory_items):
+    print("----------Remove Ingredient----------")
+    display_inventory(inventory_items)
+    ingredient_name = input("Enter the ingredient name to remove: ")
+    for i in range(len(inventory_items)):
+        if inventory_items[i][0].lower() == ingredient_name.lower():
+            item = inventory_items[i]
+            print(f"Removing {item[0]} - Cost: RM{item[1]}")
+            confirm = input("Confirm the removal? (y/n): ")
+            if confirm.lower() == "y":
+                new_inventory = []
+                for j in range(len(inventory_items)):
+                    if j != i:
+                        new_inventory.append(inventory_items[j])
+                inventory_items = new_inventory
+                print("Ingredient removed successfully.")
+                save_inventory(inventory_items)
+            else:
+                print("Removal cancelled.")
+            return inventory_items
+    print("Ingredient not found.")
+    return inventory_items
 
 def record_production():
     print("----------Record Production Details----------")
-    # Code to record production details
-    pass
+    date = input("Enter the production date (YYYY-MM-DD): ")
+    item = input("Enter the item produced: ")
+    quantity = input("Enter the quantity produced: ")
+    
+    production_details = f"{date},{item},{quantity}"
+    
+    try:
+        with open("production_log.txt", "a") as file:
+            file.write(production_details + "\n")
+        print("Production details recorded successfully.")
+    except:
+        print("Error occurred while recording production details.")
 
 def report_equipment():
     print("----------Report Equipment Issues----------")
-    # Code to report equipment issues
-    pass
+    equipment_name = input("Enter the name of the equipment: ")
+    issue_description = input("Describe the issue: ")
+    date_reported = input("Enter the date of the report (YYYY-MM-DD): ")
+    
+    equipment_issue = f"{date_reported},{equipment_name},{issue_description}"
+    
+    try:
+        with open("equipment_issues.txt", "a") as file:
+            file.write(equipment_issue + "\n")
+        print("Equipment issue reported successfully.")
+    except:
+        print("Error occurred while reporting equipment issue.")
+
+if __name__ == "__main__":
+    baker_menu()
