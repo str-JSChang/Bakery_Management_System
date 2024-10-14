@@ -1,0 +1,8 @@
+Ingredients,Cost (RM)
+Flour,100
+Egg,120
+Sugar,45
+Fruit,100
+Yeast,20
+Chocolate Chips,30
+Whipping Cream,75
