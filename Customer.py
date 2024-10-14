@@ -126,33 +126,47 @@ def cart_page(username):
             print(f"Your cart is empty.")
 
         while True:
-            order_item = (input("Enter the Product Number to add to cart('q' to quit): "))
+            item_number = (input("Enter the Product Number to add to cart('q' to quit): "))
 
-            if order_item.lower() == "q":
-                 if customer_cart:
+            if item_number.lower() == "q":
+                if customer_cart:
                     print("-"*50 + f"\nItems in {username}'s cart:") # display current user cart
                     for item in customer_cart:
                         print(f"{item}")
                     print(f"\nTotal Amount: RM{total_bill:.2f}\n" + "-"*50)
-                 print("Exiting...")
-                 break
+                print("Exiting...")
+                break
             
-            for item in items:
-                if item[0] == order_item:
-                    price = item[3].replace('RM','').strip() # remove the RM in price
-                    try:
-                        quantity = int(input("Enter the quantity of item: "))
-                        total_bill += float(price) * quantity
-                        print(f"Added to your cart: {item[1]} {item[3]} x {quantity}")
-                        customer_cart.append(f"{item[0]} {item[1]}, RM{price} x {quantity}")
-                    except ValueError:
-                        print("Please enter a valid integer.")
+            if item_number.isdigit():
+                for item in items:
+                    if item[0] == item_number:
+                        price = float(item[3].replace('RM','').strip()) # remove the RM in price
+                        stock_amount = int(item[4])  # get stock amount from menu
+                        try:
+                            quantity = int(input("Enter the quantity of item: ").strip())
+                            if quantity <= stock_amount:
+                                total_bill += float(price) * quantity
+                                print(f"Added to your cart: {item[1]} {item[3]} x {quantity}")
+                                customer_cart.append(f"{item[0]} {item[1]}, RM{price} x {quantity}")
+                                item[4] = str(stock_amount - quantity) # update stock amount
+                            else:
+                                print(f"**Not enough stock for {item[1]}.**")
+                        except ValueError:
+                            print("Please enter a valid integer.")
 
-            menu()
-            print("-"*50 + f"\nItems in {username}'s cart:") # display current user cart
-            for item in customer_cart:
-                print(f"{item}")
-            print(f"\nTotal Amount: RM{total_bill:.2f}\n" + "-"*50)
+                with open('menu.csv', 'w') as file:
+                    file.write("ProductNumber,ProductNumber,ProductName,Category,Price,StocksAmount\n")
+                    for item in items:
+                        file.write(','.join(item) + '\n')
+
+                menu()
+                print("-"*50 + f"\nItems in {username}'s cart:") # display current user cart
+                for item in customer_cart:
+                    print(f"{item}")
+                print(f"\nTotal Amount: RM{total_bill:.2f}\n" + "-"*50)
+
+            else:
+                print("Invalid Input.")
 
         clear_cart(username)# clear old cart if cart exist before writing the new cart
 
@@ -163,6 +177,7 @@ def cart_page(username):
             for item in customer_cart:
                 file.write(f"{item}\n")
             file.write(f"Total: RM{total_bill:.2f}\n\n")
+        return
 
 
     def clear_cart(username):
@@ -187,50 +202,41 @@ def cart_page(username):
         
         with open('cart.txt', 'w') as file: # write back the rest without the cleared cart
             file.writelines(new_lines)
+        return
 
             
     def place_order(username):
-        cus_cart = False
-        customer_cart = []
-        with open('cart.txt', 'r') as file:
-            lines = file.readlines()
-
-        for line in lines:
-            if line.strip() == username:
-                cus_cart = True
-                print("-"*50)
-                print(f"\nItems in {username}'s cart: ")
-            elif cus_cart:
-                customer_cart.append(line)
-                print(line.strip())
-                if line.startswith("Total: "):
-                    print("\n" + "-"*50)
-                    break
-
-        if cus_cart:
-            order = input("Would you like to place order?(yes/no): ")
-            if order.lower() == "yes":
-                with open('order.txt','a') as file:
-                    file.write(f"{username}\n")
-                    # use random to generate order number
-                    file.write(f"Order Number: {random.randint(100,999)}\n")
-                    # write cart into order + change status
-                    for item in customer_cart:
-                        if "Order Status: in-cart" in item:
+        customer_cart = find_cart(username)
+       
+        if customer_cart:
+            while True:
+                order = input("Would you like to place order?(yes/no): ")
+                if order.lower() == "yes":
+                    with open('order.txt','a') as file:
+                        file.write(f"{username}\n")
+                        # use random to generate order number
+                        file.write(f"Order Number: {random.randint(100,999)}\n")
+                        # write cart into order + change status
+                        for item in customer_cart:
                             file.write("Order Status: order placed\n")
-                        else:
-                            file.write(item)
-                    file.write("\n")
-                   
-                clear_cart(username)
+                            file.write(f"{item}\n")
+                        file.write("\n")
+                    
+                    clear_cart(username)
 
-                print("**Your order has been placed successfully.**")
+                    print("**Your order has been placed successfully.**")
+                    return
 
-            else:
-                print("\t**Your items are still in shopping cart.**")
+                elif order.lower == "no":
+                    print("\t**Your items are still in shopping cart.**")
+                    return
+
+                else:
+                    print("Invalid input, please type 'yes' or 'no'. ")
 
         else:
             print("Your cart is empty.")
+        return
 
 
     def remove_cart_item(username):
@@ -344,12 +350,8 @@ def cart_page(username):
 
 
 def order(username):
-    order_exist = False # check for cart existance
-    status_check = False # check for 'order placed' status (becus we also have 'cancelled')
     order_found = False
     order_number = None
-    with open('order.txt', 'r') as file:
-        lines = file.readlines()
 
     while True:
         print("\n1. Orders in Progress.")
@@ -364,28 +366,25 @@ def order(username):
             continue
 
         if order_input == 1:
+            with open('order.txt', 'r') as file:
+                lines = file.readlines()
+
+            order_found = False
             for line in lines:
-                if line.strip() == username: # find username's cart
-                    order_exist = True
-                    status_check = False
-
-                if order_exist and "Order Status: order placed" in line:
-                    status_check = True
+                if line.strip() == username:
                     order_found = True
-                    print("-"*50)
-                    print(f"\n{username}'s Order: ")
-                    print(line.strip())
-                    continue
-
-                if status_check:
-                    print(line.strip())
-                    if line.startswith("Order Number: "): #search for order number
-                        order_number = line.strip().split(": ")[1]
-                    if line.startswith("Total: "): # stop printing when reach last line
-                        print("\n" + "-"*50)
-                        status_check = False
-                        order_exist = False
+                
+                if order_found:
+                    if line.strip() == "":
+                        order_found = False
+                        print("-"*50)
                         continue
+                    print(line.strip())
+
+                    if "Order Number:" in line:
+                        order_number = line.strip().split(": ")[1]
+            print("-"*50)
+            order_found = True
 
             if order_found:
                     cancel_order_input = input("Would you like to cancel your order?(yes/no): ")
@@ -420,70 +419,87 @@ def order(username):
 
         if order_input == 2:
             with open('completed_order.txt', 'r') as file:
-                pass
-        
+                lines = file.readlines()
+
+            for line in lines:
+                if line.strip() == username:
+                    order_found = True
+                
+                if order_found:
+                    if line.strip() == "":
+                        order_found = False
+                        print("-"*50)
+                        continue
+                    print(line.strip())
+            print("-"*50)
+            order_found = True
+
+            if not order_found:
+                print(f"You have no completed orders.")
+
         if order_input == 3:
             print("Exiting My Order...")
-            break
+            return
 
 def feedback(username):
     completed_orders = []
 
+    # read completed.order.txt to find username's order
     with open('completed_order.txt','r') as file:
-        lines = file.readline()
+        lines = file.readlines()
 
-        order_found = False
-        username_orders = []
+    order_found = False
+    username_orders = []
 
+    for line in lines:
+        if line.strip() == username:
+            order_found = True
+            username_orders.append(line.strip())
+        elif order_found:
+            username_orders.append(line.strip())
+            if line.startswith("Total: "):
+                completed_orders.append(username_orders)
+                username_orders = []
+                order_found = False
+        
+    if not completed_orders:
+        print("**You have no completed order.**")
+        return
+        
+    print("-"*50 + "\n" + f"{username}'s Completed Orders: ")
+    for order in completed_orders:
+        print("\n".join(order))
+        print("-"*50)
+
+    order_number = input("\nEnter the order number you want to leave feedback: ")
+
+    # check if user give feedback for the currrent order
+    feedback_given = False
+    with open('feedback.txt', 'r') as file:
+        lines = file.readlines()
         for line in lines:
-            if line.strip() == username:
-                order_found = True
-                username_orders.append(line.strip())
-            elif order_found:
-                username_orders.append(line.strip())
-                if line.startswith("Total: "):
-                    completed_orders.append()
-                    username_orders = []
-                    order_found = False
-        
-        if not completed_orders:
-            print("**You have no completed order.**")
-            return
-        
-        print("-"*50 + "\n" + f"{username}'s Completed Orders: ")
-        for order in completed_orders:
-            print("\n".join(order))
-            print("-"*50)
-
-        order_number = input("\nEnter the order number you want to leave feedback: ")
-
-        # check if user give feedback for the currrent order
-        feedback_given = False
-        with open('feedback.txt', 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if username in line and f"Order Number: {order_number}" in line:
-                    feedback_given = True
-                    break
-        
-        if feedback_given:
-            print("Feedback already provided for this order.")
-            return
-        
-        # Rating from 1-5
-        while True:
-            rating = input("Please rate your order (1-5): ")
-            if rating.isdigit() and 1 <= float(rating) <= 5:
+            if username in line and f"Order Number: {order_number}" in line:
+                feedback_given = True
                 break
-            else:
-                print("Invalid rating. Please enter a number between 1 and 5.")
-            
-        comment = input("Please provide your feedback: ")
+    
+    if feedback_given:
+        print("Feedback already provided for this order.")
+        return
+    
+    # Rating from 1-5
+    while True:
+        rating = input("Please rate your order (1-5): ")
+        if rating.isdigit() and 1 <= float(rating) <= 5:
+            break
+        else:
+            print("Invalid rating. Please enter a number between 1 and 5.")
+        
+    comment = input("Please provide your feedback: ")
 
-        with open('feedback.txt', 'a') as file:
-            file.write(f"{username}\nOrder Number: {order_number}\nRating: {rating}\nFeedback: {comment}\n\n")
+    with open('feedback.txt', 'a') as file:
+        file.write(f"{username} - Order Number: {order_number}\nRating: {rating}\nFeedback: {comment}\n\n")
 
-        print("Thank you for your feedback!")
+    print("Thank you for your feedback!")
 
 def main_customer_page(username):
     while True:
@@ -518,5 +534,5 @@ def main_customer_page(username):
             break
 
 if __name__ == "__main__":
-    username = "JiniJin"  # storing customer username (testing purpose)
+    username = "Chong"  # storing customer username (testing purpose)
     main_customer_page(username)
