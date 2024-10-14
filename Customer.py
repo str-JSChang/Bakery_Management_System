@@ -215,7 +215,8 @@ def cart_page(username):
                     with open('order.txt','a') as file:
                         file.write(f"{username}\n")
                         # use random to generate order number
-                        file.write(f"Order Number: {random.randint(100,999)}\n")
+                        order_number = ''.join(random.choices("0123456789", k=3))
+                        file.write(f"Order Number: {order_number}\n")
                         # write cart into order + change status
                         for item in customer_cart:
                             file.write("Order Status: order placed\n")
@@ -536,3 +537,4 @@ def main_customer_page(username):
 if __name__ == "__main__":
     username = "Chong"  # storing customer username (testing purpose)
     main_customer_page(username)
+
