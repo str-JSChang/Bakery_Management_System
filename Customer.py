@@ -52,7 +52,7 @@ def update_account():
         return
 
     if customer_found:
-        # Overwrite the file using updated cus list
+        # Overwrite the file using updated customer list
         with open("customer_data.csv", "w", newline='') as file:
             file.write("Name,Email,Username,Password,Role\n")
             for customer in customers:
@@ -80,13 +80,20 @@ def cart_page(username):
             elif choice == "4":
                 print("Return to main customer page...")
                 break
+            else:
+                print("Invalid selection, please enter a number between 1-4.")
 
 def display_menu():
     with open('menu.csv','r',newline='') as menu:
         lines = menu.readlines()[1:] # start with items without title
-        items = [line.strip().split(',') for line in lines]
+        items = []
+    for line in lines:
+        menu_item = line.strip()  # Remove leading whitespace
+        split_line = menu_item.split(',')  # Split by ,
+        items.append(split_line)  # Add the result to the items list
 
     print('-'*90 + '\nProductNumber\tProductName\t\t\tCategory\tPrice\t\tStocks\n' + '-'*90)
+
     for item in items:
         product_number, product_name, category, price, stock = item
 
@@ -218,27 +225,19 @@ def clear_cart(username):
         file.writelines(other_carts)
     return
 
-def read_menu():
-    menu = {}
-    with open('menu.csv', 'r') as file:
-        next(file)  # Skip the header line
-        for line in file:
-            parts = line.strip().split(',')
-            if len(parts) == 5:
-                product_number, product_name, category, price, stock_amount = parts
-                menu[product_number] = [product_name.strip(), category.strip(), price.strip(), int(stock_amount)]
-    return menu
-
-def write_menu(menu):
-    with open('menu.csv', 'w') as file:
-        file.write("ProductNumber,ProductName,Category,Price,StocksAmount\n")
-        for product_number, item in menu.items():
-            file.write(f"{product_number},{item[0]},{item[1]},{item[2]},{item[3]}\n")
 
 def place_order(username):
 
     def deduct_stock(customer_cart):
-        menu = read_menu()
+        menu = {}
+        with open('menu.csv', 'r') as file:
+            next(file)  # Skip the header line
+            for line in file:
+                parts = line.strip().split(',')
+                if len(parts) == 5:
+                    product_number, product_name, category, price, stock_amount = parts
+                    menu[product_number] = [product_name.strip(), category.strip(), price.strip(), int(stock_amount)]
+
         for item in customer_cart:
             parts = item.strip().split(' ')
             if len(parts) >= 2 and 'x' in item:
@@ -246,7 +245,11 @@ def place_order(username):
                 quantity = int(parts[-1])  # The quantity is at the end
                 if product_number in menu:
                     menu[product_number][3] -= quantity  # Deduct stock
-        write_menu(menu)
+
+        with open('menu.csv', 'w') as file:
+            file.write("ProductNumber,ProductName,Category,Price,StocksAmount\n")
+            for product_number, item in menu.items():
+                file.write(f"{product_number},{item[0]},{item[1]},{item[2]},{item[3]}\n")
 
     customer_cart = find_cart(username)
 
@@ -370,7 +373,7 @@ def remove_cart_item(username):
 
 def order(username):
     order_found = False
-    
+
     while True:
         print("\n1. Orders in Progress.")
         print("2. Completed Orders.")
@@ -506,7 +509,7 @@ def main_customer_page(username):
                 else:
                     print("Please enter a valid option between 1-5")
             except:
-                print("Invalid input. Please enter integer number between 1-5.")
+                print("Invalid selection. Please enter a number between 1-5.")
 
         if choice == 1:
             update_account()
@@ -521,6 +524,6 @@ def main_customer_page(username):
             break
 
 if __name__ == "__main__":
-    username = "JiniJin"  # storing customer username (testing purpose)
+    username = "Bowie"  # storing customer username (testing purpose)
     main_customer_page(username)
 
