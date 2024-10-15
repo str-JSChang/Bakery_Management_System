@@ -58,7 +58,7 @@ def manage_discount(menu):
     else:
         print("Product not found!")
 
-def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt'):
+def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', completed_file='completed_order.txt'):
     print("Would you like to:")
     print("1. Print a receipt for an online order (existing order).")
     print("2. Create a new order.")
@@ -73,15 +73,25 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt'):
 
             customer_name, order_status, items_bought, total = None, None, [], 0.0
             processing_order = False
+            order_lines = []
+            current_order = []
 
-            for i, line in enumerate(lines):
+            for line in lines:
                 line = line.strip()
 
                 if f'Order Number: {order_number}' in line:
                     processing_order = True
-                    customer_name = lines[i - 1].strip() if i > 0 else None
+                    current_order.append(line)
+                    continue
 
                 if processing_order:
+                    
+                    current_order.append(line)
+
+                    if line and 'Order Status' not in line and 'Order Number:' not in line:
+                        if customer_name is None:
+                            customer_name = line
+
                     if 'Order Status:' in line:
                         order_status = line.split(': ')[1].strip().lower()
                     
@@ -112,6 +122,16 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt'):
                     save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
                     update_order_status(order_number, 'Completed', order_file)
                     print(f"Order {order_number}'s status updated to 'Completed'.")
+
+                    with open(completed_file, 'a') as completed:
+                        for order_line in current_order:
+                            completed.write(order_line + '\n')
+
+                    with open(order_file, 'w') as file:
+                        for line in lines:
+                            if line.strip() not in current_order:
+                                file.write(line)
+
                 elif order_status == 'cancelled':
                     print(f"Order {order_number} is cancelled. Receipt cannot be printed.")
                 else:
@@ -123,10 +143,10 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt'):
             print(f"An error occurred: {e}")
 
     elif choice == '2':
-        # New order functionality
         customer_name = input("Enter customer's name: ")
         items_bought = []
         total = 0.0
+        order_number = random.randint(100, 999)  
         
         while True:
             product_number = input("Enter Product Number (or type 'done' to finish): ").strip()
@@ -153,21 +173,34 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt'):
 
             if not product_found:
                 print(f"Product with Product Number {product_number} not found.")
-        
-        # Ask if a discount should be applied
+         
         discount_choice = input("Would you like to apply a discount? (yes or no): ").strip().lower()
         if discount_choice == 'yes':
             discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
             total = total - total * (discount / 100)
             print(f"Discount of {discount}% applied. New total is RM{total:.2f}")
 
-        # Generate and print the receipt
         bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
         now = datetime.now()
         date_time = now.strftime("%Y-%m-%d %H:%M:%S")
         
         print_receipt(customer_name, items_bought, total, bill_id, date_time)
         save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
+
+        try:
+            with open(order_file, 'a') as file:
+                file.write(f"{customer_name}\n")
+                file.write(f"Order Number: {order_number}\n")
+                file.write(f"Order Status: Order placed\n")
+                for item in items_bought:
+                    file.write(f"{item}\n")
+                file.write(f"Total: RM{total:.2f}\n")
+                file.write("\n")  
+                
+            print(f"New order successfully saved with Order Number: {order_number}")
+        except Exception as e:
+            print(f"Error writing to {order_file}: {e}")
+            print("Please check file permissions or the file path.")
 
     else:
         print("Invalid choice. Please enter 1 or 2.")
@@ -212,6 +245,7 @@ def update_order_status(order_number, new_status, order_file='order.txt'):
                 file.write(line)
     except Exception as e:
         print(f"An error occurred while updating the order status: {e}")
+
 
 def generate_reports(order_file='order.txt'):
     try:
