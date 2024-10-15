@@ -206,6 +206,7 @@ def view_all_orders():
     
     return managerPage()
 
+# File need to change to order.txt
 def update_order_status():
     order_id = input("Enter the Order ID to update: ")
     new_status = input("Enter the new status: ")
