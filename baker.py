@@ -151,7 +151,6 @@ def manage_recipes():
                     recipes.append([name, ingredients, instructions])
     except FileNotFoundError:
         print("Error: 'recipes.txt' file not found.")
-        return
 
     while True:
         print("1. View Recipes")
@@ -183,7 +182,7 @@ def save_recipes(recipes):
     try:
         with open("recipes.txt", "w", newline="") as file:
             for recipe in recipes:
-                file.write(f"{recipe[0]}/{recipe[1]}/{recipe[2]}\n")
+                file.write(f"{recipe[0]}|{recipe[1]}|{recipe[2]}\n")
         print("Recipes saved successfully.")
     except:
         print("Error occurred while updating the recipes file.")
@@ -227,7 +226,8 @@ def add_recipe(recipes):
 
 def update_recipe(recipes):
     print("----------Update Existing Recipe----------")
-    display_recipes(recipes)
+    for i in range(len(recipes)):
+        print(f"{i+1}. {recipes[i][0]}")
     recipe_number = input("Enter the recipe number to update: ")
     try:
         index = int(recipe_number) - 1
@@ -252,7 +252,8 @@ def update_recipe(recipes):
 
 def remove_recipe(recipes):
     print("----------Remove Recipe----------")
-    display_recipes(recipes)
+    for i in range(len(recipes)):
+        print(f"{i+1}. {recipes[i][0]}")
     recipe_number = input("Enter the recipe number to remove: ")
     try:
         index = int(recipe_number) - 1
@@ -279,14 +280,14 @@ def remove_recipe(recipes):
 def inventory():
     print("----------Inventory's Menu----------")
     try:
-        with open("inventory.csv", "r") as file:
+        with open("inventory.txt", "r") as file:
             inventory_items = []
             for line in file:
                 if not line.startswith("Ingredients"):  
                     item = line.strip().split(",")
                     inventory_items.append(item)
     except FileNotFoundError:
-        print("Error: 'inventory.csv' file not found.")
+        print("Error: 'inventory.txt' file not found.")
         return
 
     while True:
@@ -317,7 +318,7 @@ def inventory():
 
 def save_inventory(inventory_items):
     try:
-        with open("inventory.csv", "w", newline="") as file:
+        with open("inventory.txt", "w", newline="") as file:
             file.write("Ingredients,Cost (RM)\n")
             for item in inventory_items:
                 file.write(f"{item[0]},{item[1]}\n")
