@@ -122,8 +122,8 @@ def register_staff():
                         # check staff account exist
                         for line in file:
                             fields = line.strip().split(",")
-                            if fields[2] == staff_username or fields[1] == staff_email or fields[5] == staff_id:
-                                if fields[5] != "\n":
+                            if len(fields) >= 5:
+                                if fields[2] == staff_username or fields[1] == staff_email or (len(fields) >= 6 and fields[5] == staff_id):
                                     print("This staff account already exists")
                                     return
 
