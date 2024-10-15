@@ -123,8 +123,9 @@ def register_staff():
                         for line in file:
                             fields = line.strip().split(",")
                             if fields[2] == staff_username or fields[1] == staff_email or fields[5] == staff_id:
-                                print("This staff account already exists")
-                                return
+                                if fields[5] != "\n":
+                                    print("This staff account already exists")
+                                    return
 
                         if confirmStaff_pwd == staff_pwd:
                             hashed_pwd = hashlib.md5(staff_pwd.encode()).hexdigest()
