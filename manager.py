@@ -1,5 +1,6 @@
-import hashlib
-from main import login, validate_email, register_customer, register_staff
+from main import main,validate_email, register_customer, register_staff
+from baker import inventory
+from cashier import generate_reports, calculate_total_sales, calculate_profit
 
 def managerPage():
     print("----------Manager's page----------")
@@ -14,15 +15,15 @@ def managerPage():
         try:
             choice = int(input("Please enter your selection (1-6): "))
             if choice == 1:
-                return manage_credentials()
+                manage_credentials()
             elif choice == 2:
-                return manage_orders()
+                manage_orders()
             elif choice == 3:
-                return manage_financials()
+                manage_financials()
             elif choice == 4:
-                return manage_inventory()
+                manage_inventory()
             elif choice == 5:
-                return view_customer_feedback()
+                view_customer_feedback()
             elif choice == 6:
                 print("Exiting Manager's page...")
                 return
@@ -31,7 +32,6 @@ def managerPage():
         except ValueError:
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 6.")
 
-# CREDENTIALS PART
 def manage_credentials():
     print("----------Manage System Credentials----------")
     print("1. View Credentials")
@@ -52,13 +52,11 @@ def manage_credentials():
             elif choice == 4:
                 delete_user()
             elif choice == 5:
-                print("Returning to Manager's page...")
-                return managerPage()
+                return
             else:
                 print("Please enter a valid option between 1 to 5.")
         except ValueError:
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 5.")
-    
 
 def view_credentials():
     try:
@@ -69,8 +67,6 @@ def view_credentials():
                 print(f"Name: {user[0]}, Email: {user[1]}, Username: {user[2]}, Role: {user[4]}")
     except FileNotFoundError:
         print("Error: 'user_data.csv' file not found.")
-    
-    return managerPage()
 
 def add_new_user():
     print("----------Add New User----------")
@@ -83,19 +79,14 @@ def add_new_user():
             choice = int(input("Please enter your selection (1-3): "))
             if choice == 1:
                 register_customer()
-                print("\nUpdated user data:")
-                view_credentials()
             elif choice == 2:
                 register_staff()
-                print("\nUpdated user data:")
-                view_credentials()
             elif choice == 3:
-                return manage_credentials()
+                return
             else:
                 print("Please enter a valid option between 1 to 3.")
         except ValueError:
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 3.")
-    
 
 def update_user():
     print("----------Update Existing User----------")
@@ -115,7 +106,7 @@ def update_user():
                 
                 new_name = input("Enter new name (or press enter to keep current): ")
                 new_email = input("Enter new email (or press enter to keep current): ")
-                if new_email:
+                if new_email == True:
                     new_email = validate_email()
                 new_role = input("Enter new role (or press enter to keep current): ")
                 
@@ -128,7 +119,7 @@ def update_user():
                 break
             i += 1
         
-        if updated:
+        if updated == True:
             with open("user_data.csv", "w") as file:
                 file.writelines(lines)
             print("User updated successfully.")
@@ -138,8 +129,6 @@ def update_user():
             print("User not found.")
     except IOError:
         print("Error: Unable to update user.")
-    
-    return managerPage()
 
 def delete_user():
     print("----------Delete User----------")
@@ -157,7 +146,7 @@ def delete_user():
             else:
                 deleted = True
         
-        if deleted:
+        if deleted == True:
             with open("user_data.csv", "w") as file:
                 for line in updated_lines:
                     file.write(line)
@@ -168,10 +157,7 @@ def delete_user():
             print("User not found.")
     except IOError:
         print("Error: Unable to delete user.")
-    
-    return managerPage()
 
-# ORDERS
 def manage_orders():
     print("----------Manage Orders----------")
     print("1. View All Orders")
@@ -186,204 +172,92 @@ def manage_orders():
             elif choice == 2:
                 update_order_status()
             elif choice == 3:
-                print("Returning to Manager's page...")
-                return managerPage()
+                return
             else:
                 print("Please enter a valid option between 1 to 3.")
         except ValueError:
             print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 3.")
-    
 
 def view_all_orders():
     try:
-        with open("orders.csv", "r") as file:
+        with open("order.txt", "r") as file:
             print("----------All Orders----------")
             for line in file:
-                order = line.strip().split(",")
-                print(f"Order ID: {order[0]}, Customer: {order[1]}, Items: {order[2]}, Total: {order[3]}, Status: {order[4]}")
+                print(line.strip())
     except FileNotFoundError:
-        print("Error: 'orders.csv' file not found.")
-    
-    return managerPage()
+        print("Error: 'order.txt' file not found.")
 
-# File need to change to order.txt
 def update_order_status():
-    order_id = input("Enter the Order ID to update: ")
+    order_number = input("Enter the Order Number to update: ")
     new_status = input("Enter the new status: ")
 
     try:
-        with open("orders.csv", "r") as file:
+        with open("order.txt", "r") as file:
             lines = file.readlines()
         
         updated = False
         i = 0
         while i < len(lines):
-            order = lines[i].strip().split(",")
-            if order[0] == order_id:
-                order[4] = new_status
-                lines[i] = ",".join(order) + "\n"
+            if f"Order Number: {order_number}" in lines[i]:
+                lines[i+1] = f"Order Status: {new_status}\n"
                 updated = True
                 break
             i += 1
         
-        if updated:
-            with open("orders.csv", "w") as file:
+        if updated == True:
+            with open("order.txt", "w") as file:
                 file.writelines(lines)
             print("Order status updated successfully.")
         else:
             print("Order not found.")
     except IOError:
         print("Error: Unable to update order status.")
-    
-    return managerPage()
 
-# FINANCIALS
 def manage_financials():
     print("----------Manage Company Financials----------")
     print("1. View Financial Summary")
-    print("2. Add Income")
-    print("3. Add Expense")
-    print("4. Back to Manager's page")
+    print("2. Generate Sales Report")
+    print("3. Back to Manager's page")
 
     while True:
         try:
-            choice = int(input("Please enter your selection (1-4): "))
+            choice = int(input("Please enter your selection (1-3): "))
             if choice == 1:
-                pass# view_financial_summary()
+                view_financial_summary()
             elif choice == 2:
-                pass# add_income()
+                generate_reports()
             elif choice == 3:
-                pass# add_expense()
-            elif choice == 4:
-                print("Returning to Manager's page...")
-                return managerPage()
+                return
             else:
-                print("Please enter a valid option between 1 to 4.")
+                print("Please enter a valid option between 1 to 3.")
         except ValueError:
-            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 4.")
+            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 3.")
+
+def view_financial_summary():
+    total_sales = calculate_total_sales()
+    profit = calculate_profit()
     
-# INVENTORY
+    print("----------Financial Summary----------")
+    print(f"Total Sales: RM{total_sales:.2f}")
+    print(f"Total Profit: RM{profit:.2f}")
+
 def manage_inventory():
-    print("----------Manage Inventory----------")
-    print("1. View Inventory")
-    print("2. Add New Item")
-    print("3. Update Item Quantity")
-    print("4. Remove Item")
-    print("5. Back to Manager's page")
+    inventory()
 
-    while True:
-        try:
-            choice = int(input("Please enter your selection (1-5): "))
-            if choice == 1:
-                view_inventory()
-            elif choice == 2:
-                add_inventory_item()
-            elif choice == 3:
-                update_item_quantity()
-            elif choice == 4:
-                remove_inventory_item()
-            elif choice == 5:
-                print("Returning to Manager's page...")
-                return managerPage()
-            else:
-                print("Please enter a valid option between 1 to 5.")
-        except ValueError:
-            print("Invalid Input. Error occurs, Please enter NUMBER ONLY between 1 and 5.")
-    
-
-
-def view_inventory():
-    try:
-        with open("inventory.csv", "r") as file:
-            print("----------Inventory----------")
-            for line in file:
-                item = line.strip().split(",")
-                print(f"Item: {item[0]}, Quantity: {item[1]}, Cost: {item[2]}")
-    except FileNotFoundError:
-        print("Error: 'inventory.csv' file not found.")
-    
-    return managerPage()
-
-def add_inventory_item():
-    item_name = input("Enter item name: ")
-    quantity = input("Enter quantity: ")
-    cost = input("Enter cost per unit: ")
-    
-    try:
-        with open("inventory.csv", "a") as file:
-            file.write(f"{item_name},{quantity},{cost}\n")
-        print("Item added successfully.")
-    except IOError:
-        print("Error: Unable to add item.")
-    
-    return managerPage()
-
-def update_item_quantity():
-    item_name = input("Enter item name to update: ")
-    new_quantity = input("Enter new quantity: ")
-    
-    try:
-        with open("inventory.csv", "r") as file:
-            lines = file.readlines()
-        
-        updated = False
-        i = 0
-        while i < len(lines):
-            item = lines[i].strip().split(",")
-            if item[0] == item_name:
-                item[1] = new_quantity
-                lines[i] = ",".join(item) + "\n"
-                updated = True
-                break
-            i += 1
-        
-        if updated:
-            with open("inventory.csv", "w") as file:
-                file.writelines(lines)
-            print("Item quantity updated successfully.")
-        else:
-            print("Item not found.")
-    except IOError:
-        print("Error: Unable to update item quantity.")
-    
-    return managerPage()
-
-def remove_inventory_item():
-    item_name = input("Enter item name to remove: ")
-    
-    try:
-        with open("inventory.csv", "r") as file:
-            lines = file.readlines()
-        
-        updated_lines = []
-        for line in lines:
-            if line.strip().split(",")[0] != item_name:
-                updated_lines.append(line)
-        
-        if len(updated_lines) < len(lines):
-            with open("inventory.csv", "w") as file:
-                for line in updated_lines:
-                    file.write(line)
-            print("Item removed successfully.")
-        else:
-            print("Item not found.")
-    except IOError:
-        print("Error: Unable to remove item.")
-    
-    return managerPage()
-
-# FEEDBACK
 def view_customer_feedback():
+    print("----------Customer Feedback----------")
     try:
-        with open("feedback.csv", "r") as file:
-            print("----------Customer Feedback----------")
+        with open("feedback.txt", "r") as file:
+            feedback_found = False
             for line in file:
-                feedback = line.strip().split(",")
-                print(f"Customer: {feedback[0]}, Product: {feedback[1]}, Rating: {feedback[2]}, Comment: {feedback[3]}")
+                print(line.strip())
+                feedback_found = True
+            if feedback_found == False:
+                print("No feedback available.")
     except FileNotFoundError:
-        print("Error: 'feedback.csv' file not found.")
-    
-    return managerPage()
+        print("Error: 'feedback.txt' file not found.")
+    except IOError:
+        print("Error: Unable to read the feedback file.")
 
 if __name__ == "__main__":
-    managerPage()
+    main()
