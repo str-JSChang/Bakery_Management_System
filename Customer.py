@@ -132,6 +132,30 @@ def find_cart(username):
     return customer_cart
 
 
+def clear_cart(username):
+    with open('cart.txt', 'r') as file:
+        lines = file.readlines()
+
+    other_carts = []  # To store lines that will be written back
+    user_cart = False # clean the current username cart
+
+    # Find username cart
+    for line in lines:
+        if line.strip() == username:
+            user_cart = True
+            continue
+
+        if user_cart and line.strip() == "": # stop when meet empty line
+            user_cart = False
+            continue
+
+        if not user_cart:
+            other_carts.append(line)
+    
+    with open('cart.txt', 'w') as file: # write back the rest without the cleared cart
+        file.writelines(other_carts)
+    return
+
 def update_cart(username):
     with open('menu.csv','r',newline='') as file:
         lines = file.readlines()[1:] # start with items without title
@@ -174,7 +198,7 @@ def update_cart(username):
                             total_bill += float(price) * quantity
                             print(f"Added to your cart: {item[1]} {item[3]} x {quantity}")
                             customer_cart.append(f"{item[0]} {item[1]}, RM{price} x {quantity}")
-                            item[4] = str(stock_amount - quantity) # update stock amount
+
                         else:
                             print(f"**Not enough stock for {item[1]}.**")
                     except ValueError:
@@ -200,35 +224,7 @@ def update_cart(username):
         file.write(f"Total: RM{total_bill:.2f}\n\n")
     return
 
-
-def clear_cart(username):
-    with open('cart.txt', 'r') as file:
-        lines = file.readlines()
-
-    other_carts = []  # To store lines that will be written back
-    user_cart = False # clean the current username cart
-
-    # Find username cart
-    for line in lines:
-        if line.strip() == username:
-            user_cart = True
-            continue
-
-        if user_cart and line.strip() == "": # stop when meet empty line
-            user_cart = False
-            continue
-
-        if not user_cart:
-            other_carts.append(line)
-    
-    with open('cart.txt', 'w') as file: # write back the rest without the cleared cart
-        file.writelines(other_carts)
-    return
-
-
-def place_order(username):
-
-    def deduct_stock(customer_cart):
+def deduct_stock(customer_cart):
         menu = {}
         with open('menu.csv', 'r') as file:
             next(file)  # Skip the header line
@@ -245,12 +241,16 @@ def place_order(username):
                 quantity = int(parts[-1])  # The quantity is at the end
                 if product_number in menu:
                     menu[product_number][3] -= quantity  # Deduct stock
+                else:
+                    print(f"Error: Product number {product_number} not found in the menu.")  # Log an error
+                    return
 
         with open('menu.csv', 'w') as file:
             file.write("ProductNumber,ProductName,Category,Price,StocksAmount\n")
             for product_number, item in menu.items():
                 file.write(f"{product_number},{item[0]},{item[1]},{item[2]},{item[3]}\n")
 
+def place_order(username):
     customer_cart = find_cart(username)
 
     if not customer_cart:
@@ -493,7 +493,7 @@ def feedback(username):
 
 def main_customer_page(username):
     while True:
-        print("-"*50 + "\n\t" + f"Welcome, {username.upper()}.\n"+ "-"*50)
+        print("-"*50 + "\n  " + f"-----Welcome to Avenger Bakery! {username.upper()}.-----\n"+ "-"*50)
         print("1. Update Account")
         print("2. Shopping Cart")
         print("3. My Order")
@@ -526,4 +526,3 @@ def main_customer_page(username):
 if __name__ == "__main__":
     username = "Bowie"  # storing customer username (testing purpose)
     main_customer_page(username)
-
