@@ -1,4 +1,8 @@
 import hashlib
+from Customer import main_customer_page
+from baker import baker_menu
+from cashier import cashier_main
+from manager import managerPage
 
 #banner
 def print_banner():
@@ -23,16 +27,16 @@ def login():
                     print(f"Login successful! Welcome, {fields[0]}.")
                     if fields[4] == "manager":
                         # Proceed to customer functions
-                        pass
+                        managerPage()
                     elif fields[4] == "customer":
                         # Proceed to manager functions
-                        pass
+                        main_customer_page(username)
                     elif fields[4] == "cashier":
                         # Proceed to baker functions
-                        pass
+                        cashier_main()
                     elif fields[4] == "baker":
                         # Proceed to cashier functions
-                        pass
+                        baker_menu()
                     else:
                         print("Invalid user role.")
                     return
