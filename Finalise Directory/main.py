@@ -47,6 +47,7 @@ def login():
 
 def validate_email(email):
     while True:
+        email = input("Please enter your email address: ").strip()
         email = email.strip()
         if email and email.endswith("@gmail.com"):
             return email
