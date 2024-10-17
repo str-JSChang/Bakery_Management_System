@@ -418,7 +418,7 @@ def main():
     menu = load_csv()
     
     while True:
-        print("Welcome to the Bakery Management System")
+        print("Welcome to the Bakery Management System: Cashier Page")
         print("1. Display Menu")
         print("2. Manage Discounts")
         print("3. Generate Receipt")
