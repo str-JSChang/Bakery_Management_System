@@ -283,7 +283,7 @@ def update_order_status(order_number, new_status, order_file='order.txt'):
         order_found = False
 
         for line in lines:
-            if f"Order Number: {order_number}" in line:
+            if f"\n\nOrder Number: {order_number}" in line:
                 order_found = True
                 updated_lines.append(line)
                 continue
@@ -418,7 +418,7 @@ def main():
     menu = load_csv()
     
     while True:
-        print("Welcome to the Bakery Management System: Cashier Page")
+        print("----------Cashier's Menu----------")
         print("1. Display Menu")
         print("2. Manage Discounts")
         print("3. Generate Receipt")
