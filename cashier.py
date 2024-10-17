@@ -44,19 +44,38 @@ def display_menu(menu):
     
     print('-' * 90)
 
-def manage_discount(menu):
+def manage_discount(menu_file= 'menu.csv'):
     prod_num = input("Enter Product Number to apply discount: ")
     discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
-    
-    for item in menu['items']:
-        if item['ProductNumber'] == prod_num:
-            original_price = item['price']
+
+    with open(menu_file, 'r') as file:
+        lines = file.readlines()
+
+    updated_lines = []
+    product_found = False
+
+    for line in lines:
+        if line.startswith('ProductNumber'):
+            updated_lines.append(line)  
+            continue
+        
+        data = line.strip().split(',')
+        if data[0] == prod_num:
+            product_found = True
+            original_price = float(data[3].replace("RM", ""))
             discounted_price = original_price - original_price * (discount / 100)
-            item['price'] = discounted_price
-            print(f"Discount applied: {item['ProductName']} new price is RM{item['price']:.2f} (was RM{original_price:.2f})")
-            break
-    else:
+            data[3] = f"RM{discounted_price:.2f}"  
+            data[5] = f"{discount:.2f}"  
+            print(f"Discount applied: {data[1]} new price is RM{discounted_price:.2f} (was RM{original_price:.2f})")
+        
+        updated_lines.append(','.join(data) + '\n')
+
+    if not product_found:
         print("Product not found!")
+        return
+
+    with open(menu_file, 'w') as file:
+        file.writelines(updated_lines)
 
 def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', completed_file='completed_order.txt'):
     print("Would you like to:")
@@ -377,7 +396,7 @@ def main():
         if choice == '1':
             display_menu(menu)
         elif choice == '2':
-            manage_discount(menu)
+            manage_discount()
         elif choice == '3':
             generate_receipt(menu)
         elif choice == '4':
