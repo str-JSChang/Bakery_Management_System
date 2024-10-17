@@ -1,81 +1,103 @@
 import random
 from datetime import datetime
 
-def load_csv(file_path='menu.csv'): 
-    menu = {'items': []}
+def load_csv(menu_file='menu.csv'):
     try:
-        with open(file_path, 'r') as file:
-            for line in file.readlines()[1:]:  
-                product_number, product_name, category, price, stock = line.strip().split(',')
-                menu['items'].append({
-                    'ProductNumber': product_number.strip(),
-                    'ProductName': product_name.strip(),
-                    'category': category.strip(),
-                    'price': float(price.replace('RM', '').strip()),  
-                    'stocksAmount': int(stock.strip())
-                })
+        with open(menu_file, 'r') as file:
+            lines = file.readlines()
+    except FileNotFoundError:
+        print(f"Error: '{menu_file}' file not found.")
+        return None
     except Exception as e:
-        print(f"Error loading menu: {e}")
+        print(f"An error occurred while loading the CSV: {e}")
         return None
 
-    return menu
+    menu_items = []
+    try:
+        for line in lines[1:]:
+            data = line.strip().split(',')
+            item = {
+                'ProductNumber': data[0],
+                'ProductName': data[1],
+                'Category': data[2],
+                'price': float(data[3].replace("RM", "")),
+                'stocksAmount': int(data[4]),
+                'Discount': float(data[5])
+            }
+            menu_items.append(item)
+    except (ValueError, IndexError) as e:
+        print(f"Error processing line: {line}. Error: {e}")
+        return None
+
+    return {'items': menu_items}
 
 def display_menu(menu):
-    items = menu['items']
-    
-    print('-' * 90)
-    print(f"{'ProductNumber': <15}{'ProductName': <35}{'Category': <15}{'Price': <10}{'Stocks': <10}")
-    print('-' * 90)
-    
-    for item in items:
-        product_number = item.get('ProductNumber').strip()
-        product_name = item.get('ProductName').strip()
-        category = item.get('category').strip()
-        price = item.get('price')
-        stock = item.get('stocksAmount')
-        
-        print(
-            f"{product_number: <15}"
-            f"{product_name: <35}"
-            f"{category: <15}"
-            f"RM{price: <10.2f}"
-            f"{stock: <10}"
-        )
-    
-    print('-' * 90)
+    if not menu:
+        print("Menu data is missing or couldn't be loaded.")
+        return
 
-def manage_discount(menu_file= 'menu.csv'):
-    prod_num = input("Enter Product Number to apply discount: ")
-    discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
+    try:
+        items = menu['items']
+        print('-' * 90)
+        print(f"{'ProductNumber': <15}{'ProductName': <35}{'Category': <15}{'Price': <10}{'Stocks': <10}{'Discount': <10}")
+        print('-' * 90)
 
-    with open(menu_file, 'r') as file:
-        lines = file.readlines()
+        for item in items:
+            product_number = item['ProductNumber'].strip()
+            product_name = item['ProductName'].strip()
+            category = item['Category'].strip()
+            price = item['price']
+            stock = item['stocksAmount']
+            discount = item['Discount']
+
+            print(f"{product_number: <15}{product_name: <35}{category: <15}RM{price: <10.2f}{stock: <10}{discount: <10.2f}")
+
+        print('-' * 90)
+    except Exception as e:
+        print(f"An error occurred while displaying the menu: {e}")
+
+def manage_discount(menu_file='menu.csv'):
+    try:
+        prod_num = input("Enter Product Number to apply discount: ")
+        discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
+
+        with open(menu_file, 'r') as file:
+            lines = file.readlines()
+    except FileNotFoundError:
+        print(f"Error: '{menu_file}' file not found.")
+        return
+    except ValueError as e:
+        print(f"Invalid input: {e}")
+        return
 
     updated_lines = []
     product_found = False
 
-    for line in lines:
-        if line.startswith('ProductNumber'):
-            updated_lines.append(line)  
-            continue
-        
-        data = line.strip().split(',')
-        if data[0] == prod_num:
-            product_found = True
-            original_price = float(data[3].replace("RM", ""))
-            discounted_price = original_price - original_price * (discount / 100)
-            data[3] = f"RM{discounted_price:.2f}"  
-            data[5] = f"{discount:.2f}"  
-            print(f"Discount applied: {data[1]} new price is RM{discounted_price:.2f} (was RM{original_price:.2f})")
-        
-        updated_lines.append(','.join(data) + '\n')
+    try:
+        for line in lines:
+            if line.startswith('ProductNumber'):
+                updated_lines.append(line)
+                continue
 
-    if not product_found:
-        print("Product not found!")
-        return
+            data = line.strip().split(',')
+            if data[0] == prod_num:
+                product_found = True
+                original_price = float(data[3].replace("RM", ""))
+                discounted_price = original_price - original_price * (discount / 100)
+                data[3] = f"RM{discounted_price:.2f}"
+                data[5] = f"{discount:.2f}"
+                print(f"Discount applied: {data[1]} new price is RM{discounted_price:.2f} (was RM{original_price:.2f})")
 
-    with open(menu_file, 'w') as file:
-        file.writelines(updated_lines)
+            updated_lines.append(','.join(data) + '\n')
+
+        if not product_found:
+            print("Product not found!")
+            return
+
+        with open(menu_file, 'w') as file:
+            file.writelines(updated_lines)
+    except Exception as e:
+        print(f"An error occurred while managing the discount: {e}")
 
 def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', completed_file='completed_order.txt'):
     print("Would you like to:")
@@ -92,7 +114,6 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
 
             customer_name, order_status, items_bought, total = None, None, [], 0.0
             processing_order = False
-            order_lines = []
             current_order = []
 
             for line in lines:
@@ -104,7 +125,6 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
                     continue
 
                 if processing_order:
-                    
                     current_order.append(line)
 
                     if line and 'Order Status' not in line and 'Order Number:' not in line:
@@ -113,23 +133,23 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
 
                     if 'Order Status:' in line:
                         order_status = line.split(': ')[1].strip().lower()
-                    
+
                     elif any(char.isdigit() for char in line) and 'Total' not in line:
                         parts = line.split(',')
                         if len(parts) >= 2:
                             quantity_and_product = parts[0].strip()
-                            product_price = parts[1].strip()  
+                            product_price = parts[1].strip()
 
-                            quantity = int(quantity_and_product.split()[0])  
-                            product_name = quantity_and_product[len(str(quantity)):].strip()  
+                            quantity = int(quantity_and_product.split()[0])
+                            product_name = quantity_and_product[len(str(quantity)):].strip()
 
-                            price = float(product_price.replace('RM', '').strip().split('x')[0])  
+                            price = float(product_price.replace('RM', '').strip().split('x')[0])
 
                             items_bought.append(f"{quantity} * {product_name} - RM{price * quantity:.2f}")
 
                     elif 'Total:' in line:
                         total = float(line.split('RM')[1].strip())
-                        break  
+                        break
 
             if processing_order:
                 if order_status in ['completed', 'order placed']:
@@ -165,22 +185,26 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
         customer_name = input("Enter customer's name: ")
         items_bought = []
         total = 0.0
-        order_number = random.randint(100, 999)  
-        
+        order_number = random.randint(100, 999)
+
         while True:
             product_number = input("Enter Product Number (or type 'done' to finish): ").strip()
             if product_number.lower() == 'done':
                 break
-            
-            quantity = int(input(f"Enter quantity for product number {product_number}: "))
-            
+
+            try:
+                quantity = int(input(f"Enter quantity for product number {product_number}: "))
+            except ValueError:
+                print("Invalid input for quantity.")
+                continue
+
             product_found = False
             for item in menu['items']:
                 if item['ProductNumber'] == product_number:
                     product_name = item['ProductName']
                     price = item['price']
                     stock = item['stocksAmount']
-                    
+
                     if quantity > stock:
                         print(f"Insufficient stock for {product_name}. Only {stock} left.")
                     else:
@@ -192,17 +216,20 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
 
             if not product_found:
                 print(f"Product with Product Number {product_number} not found.")
-         
+
         discount_choice = input("Would you like to apply a discount? (yes or no): ").strip().lower()
         if discount_choice == 'yes':
-            discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
-            total = total - total * (discount / 100)
-            print(f"Discount of {discount}% applied. New total is RM{total:.2f}")
+            try:
+                discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
+                total = total - total * (discount / 100)
+                print(f"Discount of {discount}% applied. New total is RM{total:.2f}")
+            except ValueError:
+                print("Invalid input for discount.")
 
         bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
         now = datetime.now()
         date_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        
+
         print_receipt(customer_name, items_bought, total, bill_id, date_time)
         save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
 
@@ -214,57 +241,65 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
                 for item in items_bought:
                     file.write(f"{item}\n")
                 file.write(f"Total: RM{total:.2f}\n")
-                file.write("\n")  
-                
-            print(f"New order successfully saved with Order Number: {order_number}")
-        except Exception as e:
-            print(f"Error writing to {order_file}: {e}")
-            print("Please check file permissions or the file path.")
+                file.write("\n")
 
-    else:
-        print("Invalid choice. Please enter 1 or 2.")
+            print("Order placed successfully!")
+        except Exception as e:
+            print(f"An error occurred while saving the order: {e}")
 
 def print_receipt(customer_name, items_bought, total, bill_id, date_time):
-    print("\n--- RECEIPT ---")
-    print("DATA INTO BAKERY SDN.BHD")
+    print("\n----- Bakery Receipt -----")
+    print(f"Customer: {customer_name}")
     print(f"Bill ID: {bill_id}")
-    print(f"Date: {date_time}")
-    print(f"Customer Name: {customer_name}")
-    print("Order Summary:")
+    print(f"Date & Time: {date_time}")
+    print("\nItems:")
     for item in items_bought:
-        print(item)
-    print(f"Total: RM{total:.2f}")
-    print("-" * 40)
-    print(f"--- THANK YOU {customer_name}, SEE YOU NEXT TIME! ---")
+        print(f"- {item}")
+    print(f"\nTotal: RM{total:.2f}")
+    print("--------------------------\n")
 
-def save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file):
-    with open(receipt_file, 'a') as file:
-        file.write("\n--- RECEIPT ---\n")
-        file.write("DATA INTO BAKERY SDN.BHD\n")
-        file.write(f"Bill ID: {bill_id}\n")
-        file.write(f"Date: {date_time}\n")
-        file.write(f"Customer Name: {customer_name}\n")
-        file.write("Order Summary:\n")
-        for item in items_bought:
-            file.write(f"{item}\n")
-        file.write(f"Total: RM{total:.2f}\n")
-        file.write("--- THANK YOU, SEE YOU NEXT TIME! ---\n")
+def save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file='cus_recp.txt'):
+    try:
+        with open(receipt_file, 'a') as file:
+            file.write(f"\n----- Bakery Receipt -----\n")
+            file.write(f"Customer: {customer_name}\n")
+            file.write(f"Bill ID: {bill_id}\n")
+            file.write(f"Date & Time: {date_time}\n")
+            file.write("\nItems:\n")
+            for item in items_bought:
+                file.write(f"- {item}\n")
+            file.write(f"\nTotal: RM{total:.2f}\n")
+            file.write("--------------------------\n\n")
+        print("Receipt saved successfully.")
+    except Exception as e:
+        print(f"An error occurred while saving the receipt: {e}")
 
 def update_order_status(order_number, new_status, order_file='order.txt'):
     try:
         with open(order_file, 'r') as file:
             lines = file.readlines()
 
+        updated_lines = []
+        order_found = False
+
+        for line in lines:
+            if f"Order Number: {order_number}" in line:
+                order_found = True
+                updated_lines.append(line)
+                continue
+
+            if order_found and 'Order Status:' in line:
+                updated_lines.append(f"Order Status: {new_status}\n")
+                order_found = False
+            else:
+                updated_lines.append(line)
+
         with open(order_file, 'w') as file:
-            for line in lines:
-                if f'Order Number: {order_number}' in line:
-                    index = lines.index(line) + 1
-                    if index < len(lines):
-                        lines[index] = f"Order Status: {new_status}\n"
-                file.write(line)
+            file.writelines(updated_lines)
+    except FileNotFoundError:
+        print(f"Error: '{order_file}' file not found.")
     except Exception as e:
         print(f"An error occurred while updating the order status: {e}")
-
 
 def generate_reports(order_file='order.txt'):
     try:
