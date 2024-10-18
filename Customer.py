@@ -92,13 +92,13 @@ def display_menu():
         split_line = menu_item.split(',')  # Split by ,
         items.append(split_line)  # Add the result to the items list
 
-    print('-'*90 + '\nProductNumber\tProductName\t\t\tCategory\tPrice\t\tStocks\n' + '-'*90)
+    print('-'*110 + '\nProductNumber\tProductName\t\t\tCategory\tPrice\t\tStocks\t\tDiscount\n' + '-'*110)
 
     for item in items:
-        product_number, product_name, category, price, stock = item
+        product_number, product_name, category, price, stock, discount = item
 
-        print(f"\t{product_number: <8.5}  {product_name: <33} {category: <14} {price: <17} {stock}")
-    print("-"*90)
+        print(f"\t{product_number: <7}  {product_name: <30} {category: <14} {price: <17} {stock:<15} {discount}")
+    print("-"*110)
     return items
 
 
@@ -173,7 +173,7 @@ def update_cart(username):
             customer_cart.append(old_total) # add back the old total in pure float form
 
     if not customer_cart:
-        print(f"Your cart is empty.")
+        print("You cart is empty.")
 
     while True:
         item_number = (input("Enter the Product Number to add to cart('q' to quit): "))
@@ -254,6 +254,7 @@ def place_order(username):
     customer_cart = find_cart(username)
 
     if not customer_cart:
+        
         print("Your cart is empty.")
         return
 
@@ -261,8 +262,9 @@ def place_order(username):
         order = input("Would you like to place the order? (yes/no): ").lower()
         if order == "yes":
             with open('order.txt', 'a') as file:
+                # generate order number using random module
                 order_number = ''.join(random.choices("0123456789", k=3))
-                file.write(f"{username}\nOrder Number: {order_number}\nOrder Status: order placed\n")
+                file.write(f"{username}\nOrder Number: {order_number}\nOrder Status: order placed\n") # update order status
                 for item in customer_cart:
                     file.write(f"{item}\n")
                 file.write("\n")
@@ -524,5 +526,5 @@ def main_customer_page(username):
             break
 
 if __name__ == "__main__":
-    username = "Bowie"  # storing customer username (testing purpose)
-    main_customer_page(username)
+    main_customer_page(username="User Undefined")
+
