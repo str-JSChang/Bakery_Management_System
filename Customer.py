@@ -71,7 +71,7 @@ def update_account():
 
 def cart_page(username):
         while True:
-            print("-"*50 + "\n\t" + "Shopping Cart\n"+ "-"*50)
+            print("-"*50 + "\n\t\t" + "Shopping Cart\n"+ "-"*50)
             print("1. Add to Cart")
             print("2. Remove items")
             print("3. Check Out")
@@ -91,82 +91,102 @@ def cart_page(username):
                 print("Invalid selection, please enter a number between 1-4.")
 
 def display_menu():
-    with open('menu.csv','r',newline='') as menu:
-        lines = menu.readlines()[1:] # start with items without title
-        items = []
-    for line in lines:
-        menu_item = line.strip()  # Remove leading whitespace
-        split_line = menu_item.split(',')  # Split by ,
-        items.append(split_line)  # Add the result to the items list
+    try:
+        with open('menu.csv','r',newline='') as menu:
+            lines = menu.readlines()[1:] # start with items without title
+            items = []
+        for line in lines:
+            menu_item = line.strip()  # Remove leading whitespace
+            split_line = menu_item.split(',')  # Split by ,
+            items.append(split_line)  # Add the result to the items list
 
-    print('-'*110 + '\nProductNumber\tProductName\t\t\tCategory\tPrice\t\tStocks\t\tDiscount\n' + '-'*110)
+        print('-'*110 + '\nProductNumber\tProductName\t\t\tCategory\tPrice\t\tStocks\t\tDiscount\n' + '-'*110)
 
-    for item in items:
-        product_number, product_name, category, price, stock, discount = item
+        for item in items:
+            product_number, product_name, category, price, stock, discount = item
 
-        print(f"\t{product_number: <7}  {product_name: <30} {category: <14} {price: <17} {stock:<15} {discount}")
-    print("-"*110)
-    return items
+            print(f"\t{product_number: <7}  {product_name: <30} {category: <14} {price: <17} {stock:<15} {discount}")
+        print("-"*110)
+        return items
+    except FileNotFoundError:
+        print("Error: File not found.")
+        print("PLEASE CONTACT ADMINISTRATOR IMMEDIATELY")
 
 
 def find_cart(username):
-    with open('cart.txt', 'r') as file:
-        lines = file.readlines()
+    try:
+        with open('cart.txt', 'r') as file:
+            lines = file.readlines()
 
-    customer_cart = []
-    cart_found = False  # Check if username has a cart or not
+        customer_cart = []
+        cart_found = False  # Check if username has a cart or not
 
-    for line in lines:
-        if line.strip() == username:  # If the username is found
-            cart_found = True
-            continue  # without add the username to the list
-        
-        if "Order Status: in-cart" in line:
-            continue # without adding status
+        for line in lines:
+            if line.strip() == username:  # If the username is found
+                cart_found = True
+                continue  # without add the username to the list
+            
+            if "Order Status: in-cart" in line:
+                continue # without adding status
 
-        if cart_found:
-            if line.strip() == "":  # Break when reach empty line
-                break
-            customer_cart.append(line.strip())  # Add all exist items and total in cart
+            if cart_found:
+                if line.strip() == "":  # Break when reach empty line
+                    break
+                customer_cart.append(line.strip())  # Add all exist items and total in cart
 
-    if customer_cart:
-        print(f"{username}'s Cart: ")
-        print("\n".join(customer_cart))
-        print("-" * 55)
-    else:
-        customer_cart = [] # if username not found cart is empty
+        if customer_cart:
+            print(f"{username}'s Cart: ")
+            print("\n".join(customer_cart))
+            print("-" * 55)
+        else:
+            customer_cart = [] # if username not found cart is empty
 
-    return customer_cart
+        return customer_cart
+    
+    except FileNotFoundError:
+        print("Error: File not found.")
+        print("PLEASE CONTACT ADMINISTRATOR IMMEDIATELY")
+        return
 
 
 def clear_cart(username):
-    with open('cart.txt', 'r') as file:
-        lines = file.readlines()
+    try:
+        with open('cart.txt', 'r') as file:
+            lines = file.readlines()
 
-    other_carts = []  # To store lines that will be written back
-    user_cart = False # clean the current username cart
+        other_carts = []  # To store lines that will be written back
+        user_cart = False # clean the current username cart
 
-    # Find username cart
-    for line in lines:
-        if line.strip() == username:
-            user_cart = True
-            continue
+        # Find username cart
+        for line in lines:
+            if line.strip() == username:
+                user_cart = True
+                continue
 
-        if user_cart and line.strip() == "": # stop when meet empty line
-            user_cart = False
-            continue
+            if user_cart and line.strip() == "": # stop when meet empty line
+                user_cart = False
+                continue
 
-        if not user_cart:
-            other_carts.append(line)
-    
-    with open('cart.txt', 'w') as file: # write back the rest without the cleared cart
-        file.writelines(other_carts)
-    return
+            if not user_cart:
+                other_carts.append(line)
+        
+        with open('cart.txt', 'w') as file: # write back the rest without the cleared cart
+            file.writelines(other_carts)
+        return
+    except FileNotFoundError:
+        print("Error: File not found.")
+        print("PLEASE CONTACT ADMINISTRATOR IMMEDIATELY")
+        return
 
 def update_cart(username):
-    with open('menu.csv','r',newline='') as file:
-        lines = file.readlines()[1:] # start with items without title
-        items = [line.strip().split(',') for line in lines]
+    try:
+        with open('menu.csv','r',newline='') as file:
+            lines = file.readlines()[1:] # start with items without title
+            items = [line.strip().split(',') for line in lines]
+    except FileNotFoundError:
+        print("Error: File not found.")
+        print("PLEASE CONTACT ADMINISTRATOR IMMEDIATELY")
+        return
 
     display_menu()
     customer_cart = find_cart(username) # search for existing cart
@@ -208,8 +228,10 @@ def update_cart(username):
 
                         else:
                             print(f"**Not enough stock for {item[1]}.**")
+                            break
                     except ValueError:
                         print("Please enter a valid integer.")
+                        break
 
             display_menu()
             print("-"*50 + f"\nItems in {username}'s cart:") # display current user cart
@@ -223,13 +245,18 @@ def update_cart(username):
     clear_cart(username)# clear old cart if cart exist before writing the new cart
 
     # write all items in customer_cart into txt when user quit
-    with open('cart.txt','a') as file:
-        file.write(f"{username}\n")
-        file.write("Order Status: in-cart\n")
-        for item in customer_cart:
-            file.write(f"{item}\n")
-        file.write(f"Total: RM{total_bill:.2f}\n\n")
-    return
+    try:
+        with open('cart.txt','a') as file:
+            file.write(f"{username}\n")
+            file.write("Order Status: in-cart\n")
+            for item in customer_cart:
+                file.write(f"{item}\n")
+            file.write(f"Total: RM{total_bill:.2f}\n\n")
+
+    except FileNotFoundError:
+        print("Error: File not found.")
+        print("PLEASE CONTACT ADMINISTRATOR IMMEDIATELY")
+        return
 
 def deduct_stock(customer_cart):
         menu = {}
@@ -282,7 +309,7 @@ def place_order(username):
             return
 
         elif order == "no":
-            print("\t**Your items are still in the shopping cart.**")
+            print("**Your items are still in the shopping cart.**")
             return
 
         else:
@@ -534,3 +561,4 @@ def main_customer_page(username):
 
 if __name__ == "__main__":
     main_customer_page(username="USER_UNDEFINED")
+
