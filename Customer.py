@@ -259,30 +259,31 @@ def update_cart(username):
         return
 
 def deduct_stock(customer_cart):
-        menu = {}
-        with open('menu.csv', 'r') as file:
-            next(file)  # Skip the header line
-            for line in file:
-                parts = line.strip().split(',')
-                if len(parts) == 5:
-                    product_number, product_name, category, price, stock_amount = parts
-                    menu[product_number] = [product_name.strip(), category.strip(), price.strip(), int(stock_amount)]
+    menu = {}
+    with open('menu.csv', 'r') as file:
+        header = file.readline() # Ignore the header (first line)
 
-        for item in customer_cart:
-            parts = item.strip().split(' ')
-            if len(parts) >= 2 and 'x' in item:
-                product_number = parts[0]
-                quantity = int(parts[-1])  # The quantity is at the end
-                if product_number in menu:
-                    menu[product_number][3] -= quantity  # Deduct stock
-                else:
-                    print(f"Error: Product number {product_number} not found in the menu.")  # Log an error
-                    return
+        for line in file:
+            parts = line.strip().split(',')
+            if len(parts) == 6:
+                product_number, product_name, category, price, stock_amount, discount = parts
+                menu[product_number] = [product_name.strip(), category.strip(), price.strip(), int(stock_amount), discount.strip()]
 
-        with open('menu.csv', 'w') as file:
-            file.write("ProductNumber,ProductName,Category,Price,StocksAmount\n")
-            for product_number, item in menu.items():
-                file.write(f"{product_number},{item[0]},{item[1]},{item[2]},{item[3]}\n")
+    for item in customer_cart:
+        parts = item.strip().split(' ')
+        if len(parts) >= 2 and 'x' in item:
+            product_number = parts[0]
+            quantity = int(parts[-1])  # The quantity is at the end
+            if product_number in menu:
+                menu[product_number][3] -= quantity  # Deduct stock by quantity
+            else:
+                print(f"Error: Product number {product_number} not found in the menu.")  # product number not found error
+                return
+
+    with open('menu.csv', 'w') as file:
+        file.write("ProductNumber,ProductName,Category,Price,StocksAmount,Discount\n")
+        for product_number, item in menu.items():
+            file.write(f"{product_number},{item[0]},{item[1]},{item[2]},{item[3]},{item[4]}\n")
 
 def place_order(username):
     customer_cart = find_cart(username)
@@ -408,13 +409,12 @@ def remove_cart_item(username):
 
 
 def order(username):
-    order_found = False
-
     while True:
+        print("-"*50 + "\n\t\t" + f"{username}'s Order\n"+ "-"*50)
         print("\n1. Orders in Progress.")
         print("2. Completed Orders.")
         print("3. Back")
-        print("-" * 55)
+        print("-" * 50)
 
         try:
             order_input = int(input("Enter your selection(1-3):"))
@@ -423,44 +423,48 @@ def order(username):
             continue
 
         if order_input == 1:
+            order_found = False
+            order_printed = False
             with open('order.txt', 'r') as file:
                 lines = file.readlines()
 
-            for line in lines:
-                if line.strip() == username:
-                    order_found = True
+                for line in lines:
+                    if line.strip() == username:
+                        order_found = True
 
-                if order_found:
-                    if line.strip() == "":
-                        order_found = False
-                        print("-" * 50)
-                        continue
-                    print(line.strip())
-            print("-" * 50)
-            order_found = True
+                    if order_found:
+                        if line.strip() == "":
+                            order_found = False
+                            print("-" * 50)
+                            continue
+                        print(line.strip())
+                        order_printed = True
+                print("-" * 50)
 
-            if not order_found:
-                print(f"You have no order in progress.")
+            if not order_printed:
+                print("You have no order in progress.")
 
         if order_input == 2:
+            order_found = False
+            order_printed = False
             with open('completed_order.txt', 'r') as file:
                 lines = file.readlines()
 
-            for line in lines:
-                if line.strip() == username:
-                    order_found = True
+                for line in lines:
+                    if line.strip() == username:
+                        order_found = True
 
-                if order_found:
-                    if line.strip() == "":
-                        order_found = False
-                        print("-" * 50)
-                        continue
-                    print(line.strip())
-            print("-" * 50)
-            order_found = True
+                    if order_found:
+                        if line.strip() == "":
+                            order_found = False
+                            print("-" * 50)
+                            continue
+                        print(line.strip())
+                        order_printed = True
+                print("-" * 50)
 
-            if not order_found:
-                print(f"You have no completed orders.")
+            if not order_printed:
+                print("You have no completed orders.")
 
         if order_input == 3:
             print("Exiting My Order...")
