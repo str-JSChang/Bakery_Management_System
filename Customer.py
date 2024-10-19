@@ -18,34 +18,36 @@ def update_account():
     old_username = input("Enter your current username: ")
     old_password = input("Enter your current password: ")
 
+    # Hash old password to match with the user data csv
     hashed_old_password = hashlib.md5(old_password.encode()).hexdigest()
     
-    customer_found = False
-    customers = []
+    customer_found = False # flag to find customer
+    customers = [] # store customer update details
     
     try: 
         with open('user_data.csv', 'r') as file:
             lines = file.readlines()
 
             for line in lines[1:]: # ignore the first line (title line)
-                name, email, user_name, password, role = line.strip().split(',')[:5]
+                name, email, user_name, password, role = line.strip().split(',')[:5] # ignore the staff_id
 
-                if user_name == old_username and password == hashed_old_password:
+                if user_name == old_username and password == hashed_old_password: # match username and password
                     customer_found = True
+
                     print('-'*50 + f"\nUpdate {old_username}'s Account.\n" + '-'*50)
                     user_name = input("Enter new username: ")
                     if not user_name:
-                        print("Update failed: new username cannot be empty.")
+                        print("Update failed: new username cannot be empty.") # Reject empty username
                         return
 
                     new_password = input("Enter new password: ")
                     if not new_password:
-                        print("Update failed: new password cannot be empty.")
+                        print("Update failed: new password cannot be empty.") # Reject empty password
                         return
                     comfirmed_pw = input("Comfirm new password: ")
 
-                    if comfirmed_pw == new_password:
-                        password = hashlib.md5(new_password.encode()).hexdigest()
+                    if comfirmed_pw == new_password: # check comfirmation password match with password enter
+                        password = hashlib.md5(new_password.encode()).hexdigest() # hash the password after matching success
                     else:
                         print("Passwords don't match.")
                         return
@@ -61,8 +63,8 @@ def update_account():
     if customer_found:
         # Overwrite the file using updated customer list
         with open("user_data.csv", "w", newline='') as file:
-            file.write("Name,Email,Username,Password,Role,Staff_ID\n")
-            for customer in customers:
+            file.write("Name,Email,Username,Password,Role,Staff_ID\n") # write back the title
+            for customer in customers: # write each customer details back to file
                 file.write(','.join(customer) + "\n")
         print("Customer details updated successfully.")
     else:
@@ -70,25 +72,33 @@ def update_account():
     
 
 def cart_page(username):
+    while True:
+        print("-"*50 + "\n\t\t" + "Shopping Cart\n"+ "-"*50)
+        print("1. Add to Cart")
+        print("2. Remove items")
+        print("3. Check Out")
+        print("4. Back")
+        print("-"*50)
+        
         while True:
-            print("-"*50 + "\n\t\t" + "Shopping Cart\n"+ "-"*50)
-            print("1. Add to Cart")
-            print("2. Remove items")
-            print("3. Check Out")
-            print("4. Back")
-            print("-"*50)
-            choice = str(input("Enter your selection: "))
-            if choice == "1":
-                update_cart(username)
-            elif choice == "2":
-                remove_cart_item(username)
-            elif choice == "3":
-                place_order(username)
-            elif choice == "4":
-                print("Return to main customer page...")
-                break
-            else:
-                print("Invalid selection, please enter a number between 1-4.")
+            try:
+                choice = int(input("Enter your selection(1-4): "))
+                if choice in [1,2,3,4]:
+                    break
+                else:
+                    print("Please enter a valid option between 1-4.")
+            except:
+                print("Invalid selection. Please enter a number between 1-4.")
+            
+        if choice == 1:
+            update_cart(username)
+        elif choice == 2:
+            remove_cart_item(username)
+        elif choice == 3:
+            place_order(username)
+        elif choice == 4:
+            print("Return to main customer page...")
+            return
 
 def display_menu():
     try:
@@ -415,12 +425,16 @@ def order(username):
         print("2. Completed Orders.")
         print("3. Back")
         print("-" * 50)
-
-        try:
-            order_input = int(input("Enter your selection(1-3):"))
-        except ValueError:
-            print("Invalid input. Please enter an integer number between 1-3.")
-            continue
+        
+        while True:
+            try:
+                order_input = int(input("Enter your selection(1-3):"))
+                if order_input in [1,2,3]:
+                    break
+                else:
+                    print("Please enter a valid number between 1-3.")
+            except ValueError:
+                print("Invalid input. Please enter an integer number between 1-3.")
 
         if order_input == 1:
             order_found = False
@@ -444,7 +458,7 @@ def order(username):
             if not order_printed:
                 print("You have no order in progress.")
 
-        if order_input == 2:
+        elif order_input == 2:
             order_found = False
             order_printed = False
             with open('completed_order.txt', 'r') as file:
@@ -466,12 +480,13 @@ def order(username):
             if not order_printed:
                 print("You have no completed orders.")
 
-        if order_input == 3:
+        elif order_input == 3:
             print("Exiting My Order...")
             return
 
         
 def feedback(username):
+    print("-"*50 + "\n\t\t" + f"Feedback\n"+ "-"*50)
     completed_orders = []
 
     # read completed.order.txt to find username's order
@@ -501,7 +516,20 @@ def feedback(username):
         print("\n".join(order))
         print("-"*50)
 
-    order_number = input("\nEnter the order number you want to leave feedback: ")
+    while True:
+        order_number = input("\nEnter the order number you want to leave feedback: ")
+        order_number_valid = False
+
+        # Check if the order number exists in the completed orders
+        for order in completed_orders:
+            if f"Order Number: {order_number}" in order:
+                order_number_valid = True
+                break
+        
+        if order_number_valid:
+            break  # Valid order number found exit the loop
+        else:
+            print("Invalid order number. Please enter a valid order number from your completed orders.")
 
     # check if user give feedback for the currrent order
     feedback_given = False
@@ -543,7 +571,7 @@ def main_customer_page(username):
 
         while True:
             try:
-                choice = int(input("Enter your selection(1-5): "))
+                choice = int(input("Enter your selection(1-5): ").strip())
                 if choice in [1,2,3,4,5]:
                     break
                 else:
@@ -565,4 +593,3 @@ def main_customer_page(username):
 
 if __name__ == "__main__":
     main_customer_page(username="USER_UNDEFINED")
-
