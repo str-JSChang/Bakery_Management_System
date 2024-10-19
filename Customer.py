@@ -24,22 +24,28 @@ def update_account():
     customers = []
     
     try: 
-        with open('customer_data.csv', 'r') as file:
+        with open('user_data.csv', 'r') as file:
             lines = file.readlines()
 
             for line in lines[1:]: # ignore the first line (title line)
-                name, email, user_name, password, role = line.strip().split(',')
-                # If username and password match, update user details
+                name, email, user_name, password, role = line.strip().split(',')[:5]
+
                 if user_name == old_username and password == hashed_old_password:
                     customer_found = True
-                    print(f"Update {old_username}'s Account.")
+                    print('-'*50 + f"\nUpdate {old_username}'s Account.\n" + '-'*50)
                     user_name = input("Enter new username: ")
+                    if not user_name:
+                        print("Update failed: new username cannot be empty.")
+                        return
 
-                    new_pw = input("Enter new password: ")
+                    new_password = input("Enter new password: ")
+                    if not new_password:
+                        print("Update failed: new password cannot be empty.")
+                        return
                     comfirmed_pw = input("Comfirm new password: ")
 
-                    if comfirmed_pw == new_pw:
-                        password = hashlib.md5(new_pw.encode()).hexdigest()
+                    if comfirmed_pw == new_password:
+                        password = hashlib.md5(new_password.encode()).hexdigest()
                     else:
                         print("Passwords don't match.")
                         return
@@ -48,13 +54,14 @@ def update_account():
                 customers.append([name,email,user_name,password,role])
 
     except FileNotFoundError:
-        print("'customer_data.csv' file not found.")
+        print("'user_data.csv' file not found.")
+        print("PLEASE CONTACT ADMINISTRATOR IMMEDIATELY")
         return
 
     if customer_found:
         # Overwrite the file using updated customer list
-        with open("customer_data.csv", "w", newline='') as file:
-            file.write("Name,Email,Username,Password,Role\n")
+        with open("user_data.csv", "w", newline='') as file:
+            file.write("Name,Email,Username,Password,Role,Staff_ID\n")
             for customer in customers:
                 file.write(','.join(customer) + "\n")
         print("Customer details updated successfully.")
@@ -523,8 +530,7 @@ def main_customer_page(username):
             feedback(username)
         elif choice == 5:
             print("Exiting customer page...")
-            break
+            return
 
 if __name__ == "__main__":
-    main_customer_page(username="User Undefined")
-
+    main_customer_page(username="USER_UNDEFINED")
