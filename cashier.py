@@ -353,6 +353,24 @@ def generate_reports(order_file='order.txt'):
         print(f"An error occurred: {e}")
 
 
+def calculate_total_sales(order_file='order.txt'):
+    total_sales = 0.0
+    
+    try:
+        with open(order_file, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                if 'Total:' in line:
+                    total_sales += float(line.split('RM')[1].strip())
+    except FileNotFoundError:
+        print(f"Error: '{order_file}' file not found.")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+    return total_sales
+
 def calculate_profit(order_file='order.txt', inventory_file='inventory_cost.txt'):
     sales_total = calculate_total_sales(order_file)
     
