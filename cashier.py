@@ -304,58 +304,49 @@ def generate_reports(order_file='order.txt'):
 
         for line in lines:
             line = line.strip()
-            if not line:  
-                if current_order:
-                    for item in current_order.get('Items', []):
-                        product_name = item['ProductName']
-                        quantity = item['Quantity']
-
-                        if product_name not in sales_data:
-                            sales_data[product_name] = {'total_sales': 0.0, 'order_count': 0}
-                        
-                        sales_data[product_name]['total_sales'] += item['Price'] * quantity
-                        sales_data[product_name]['order_count'] += quantity
-
-                    current_order = {}
+            if not line:  # Skip empty lines
                 continue
 
             if 'Order Number:' in line:
                 current_order['OrderNumber'] = line.split(': ')[1]
             elif 'Order Status:' in line:
                 current_order['Status'] = line.split(': ')[1]
-            elif any(char.isdigit() for char in line) and 'Total' not in line:
-                parts = line.split(',')
-                if len(parts) >= 2:
-                    quantity_and_product = parts[0].strip()
-                    product_name = quantity_and_product.split(',')[0].strip()  
-                    quantity = int(quantity_and_product.split()[0])  
+            elif '*' in line and 'Total' not in line:  # Line with product and quantity
+                parts = line.split('*')
+                quantity = int(parts[0].strip())  # Extract quantity
+                product_info = parts[1].split('-')
+                product_name = product_info[0].strip()  # Extract product name
+                price = float(product_info[1].replace('RM', '').strip())  # Extract price
 
-                    price = float(parts[1].replace('RM', '').strip().split('x')[0])  
-                    current_order.setdefault('Items', []).append({
-                        'ProductName': product_name,
-                        'Quantity': quantity,
-                        'Price': price
-                    })
+                # Add item to current order
+                current_order.setdefault('Items', []).append({
+                    'ProductName': product_name,
+                    'Quantity': quantity,
+                    'Price': price
+                })
 
-            elif 'Total:' in line:
+            elif 'Total:' in line:  # End of order
                 current_order['Total'] = float(line.split('RM')[1].strip())
-                if current_order:
-                    for item in current_order.get('Items', []):
-                        product_name = item['ProductName']
-                        quantity = item['Quantity']
 
-                        if product_name not in sales_data:
-                            sales_data[product_name] = {'total_sales': 0.0, 'order_count': 0}
-                        
-                        sales_data[product_name]['total_sales'] += item['Price'] * quantity
-                        sales_data[product_name]['order_count'] += quantity
-                    
-                    current_order = {}
+                # Update sales data
+                for item in current_order.get('Items', []):
+                    product_name = item['ProductName']
+                    quantity = item['Quantity']
+                    price = item['Price']
 
+                    if product_name not in sales_data:
+                        sales_data[product_name] = {'total_sales': 0.0, 'order_count': 0}
+
+                    sales_data[product_name]['total_sales'] += price * quantity
+                    sales_data[product_name]['order_count'] += quantity
+
+                current_order = {}  # Reset for next order
+
+        # Print sales report
         print("\n--- SALES PERFORMANCE REPORT ---")
         print(f"{'ProductName': <35}{'Total Sales (RM)': <20}{'Order Count': <15}")
         print("-" * 70)
-        
+
         for product, data in sales_data.items():
             print(f"{product: <35}{data['total_sales']:<20.2f}{data['order_count']:<15}")
 
@@ -364,23 +355,6 @@ def generate_reports(order_file='order.txt'):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def calculate_total_sales(order_file='order.txt'):
-    total_sales = 0.0
-    
-    try:
-        with open(order_file, 'r') as file:
-            lines = file.readlines()
-            for line in lines:
-                if 'Total:' in line:
-                    total_sales += float(line.split('RM')[1].strip())
-    except FileNotFoundError:
-        print(f"Error: '{order_file}' file not found.")
-        return None
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return None
-
-    return total_sales
 
 def calculate_profit(order_file='order.txt', inventory_file='inventory_cost.txt'):
     sales_total = calculate_total_sales(order_file)
