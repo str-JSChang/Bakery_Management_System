@@ -82,28 +82,29 @@ def manage_discount(menu_file='menu.csv'):
             data = line.strip().split(',')
             if data[0] == prod_num:
                 product_found = True
-                discounted_price = float(data[3].replace("RM", ""))  
+                original_price = float(data[3].replace("RM", ""))  
                 current_discount = float(data[5])  
+
                 if action == 'apply':
                     discount = float(input("Enter discount percentage (e.g., 10 for 10%): "))
-                    new_discounted_price = discounted_price - discounted_price * (discount / 100)
+                    new_discounted_price = original_price * (1 - discount / 100)
                     data[3] = f"RM{new_discounted_price:.2f}"
                     data[5] = f"{discount:.2f}"
-                    print(f"Discount applied: {data[1]} new price is RM{new_discounted_price:.2f} (was RM{discounted_price:.2f})")
+                    print(f"Discount applied: {data[1]} new price is RM{new_discounted_price:.2f} (was RM{original_price:.2f})")
 
                 elif action == 'modify':
                     print(f"Current discount: {current_discount}%")
                     new_discount = float(input(f"Enter new discount percentage (current: {current_discount}%): "))
-                    new_discounted_price = discounted_price - discounted_price * (new_discount / 100)
+                    new_discounted_price = original_price * (1 - new_discount / 100)
                     data[3] = f"RM{new_discounted_price:.2f}"
                     data[5] = f"{new_discount:.2f}"
-                    print(f"Discount modified: {data[1]} new price is RM{new_discounted_price:.2f} (was RM{discounted_price:.2f})")
+                    print(f"Discount modified: {data[1]} new price is RM{new_discounted_price:.2f} (was RM{original_price:.2f})")
 
                 elif action == 'delete':
-                    original_price = discounted_price * (100 + current_discount) / 100
-                    data[3] = f"RM{original_price:.2f}"
-                    data[5] = "0.00"  
-                    print(f"Discount removed: {data[1]} price restored to RM{original_price:.2f}")
+                    restored_price = original_price / (1 - current_discount / 100) if current_discount > 0 else original_price
+                    data[3] = f"RM{restored_price:.2f}"
+                    data[5] = "0.00"
+                    print(f"Discount removed: {data[1]} price restored to RM{restored_price:.2f}")
 
             updated_lines.append(','.join(data) + '\n')
 
