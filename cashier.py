@@ -304,31 +304,29 @@ def generate_reports(order_file='order.txt'):
 
         for line in lines:
             line = line.strip()
-            if not line:  # Skip empty lines
+            if not line:  
                 continue
 
             if 'Order Number:' in line:
                 current_order['OrderNumber'] = line.split(': ')[1]
             elif 'Order Status:' in line:
                 current_order['Status'] = line.split(': ')[1]
-            elif '*' in line and 'Total' not in line:  # Line with product and quantity
+            elif '*' in line and 'Total' not in line:  
                 parts = line.split('*')
-                quantity = int(parts[0].strip())  # Extract quantity
+                quantity = int(parts[0].strip())  
                 product_info = parts[1].split('-')
-                product_name = product_info[0].strip()  # Extract product name
-                price = float(product_info[1].replace('RM', '').strip())  # Extract price
+                product_name = product_info[0].strip()  
+                price = float(product_info[1].replace('RM', '').strip())  
 
-                # Add item to current order
                 current_order.setdefault('Items', []).append({
                     'ProductName': product_name,
                     'Quantity': quantity,
                     'Price': price
                 })
 
-            elif 'Total:' in line:  # End of order
+            elif 'Total:' in line:  
                 current_order['Total'] = float(line.split('RM')[1].strip())
 
-                # Update sales data
                 for item in current_order.get('Items', []):
                     product_name = item['ProductName']
                     quantity = item['Quantity']
@@ -340,9 +338,8 @@ def generate_reports(order_file='order.txt'):
                     sales_data[product_name]['total_sales'] += price * quantity
                     sales_data[product_name]['order_count'] += quantity
 
-                current_order = {}  # Reset for next order
+                current_order = {}  
 
-        # Print sales report
         print("\n--- SALES PERFORMANCE REPORT ---")
         print(f"{'ProductName': <35}{'Total Sales (RM)': <20}{'Order Count': <15}")
         print("-" * 70)
