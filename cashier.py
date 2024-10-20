@@ -136,11 +136,9 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
             for i, line in enumerate(lines):
                 line = line.strip()
 
-                # Find customer name before the order number
                 if 'Customer name:' in line:
                     customer_name = line.split('Customer name: ')[1]
 
-                # Check for the specific order number and start processing the order
                 if f'Order Number: {order_number}' in line:
                     processing_order = True
                     current_order.append(line)
@@ -148,31 +146,27 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
 
                 if processing_order:
                     current_order.append(line)
-                    if 'Total:' in line:  # Stop after processing the total
+                    if 'Total:' in line:  
                         break
 
-            if current_order:  # If the order was found
+            if current_order:  
                 bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
                 now = datetime.now()
                 date_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-                # Extract items bought and total amount
                 items_bought = [line for line in current_order if '*' in line]
                 total_line = next((line for line in current_order if 'Total:' in line), None)
                 total = float(total_line.split('RM')[1].strip()) if total_line else 0.0
 
-                # Print the receipt
                 print_receipt(customer_name, items_bought, total, bill_id, date_time)
                 save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
 
-                # Write to completed_order.txt
                 with open(completed_file, 'a') as completed:
                     completed.write(f"Customer Name: {customer_name}\n")
                     for order_line in current_order:
                         completed.write(order_line + '\n')
                     completed.write("\n")
 
-                # Update order status to completed in order.txt
                 update_order_status(order_number, 'Completed', order_file)
 
         except FileNotFoundError:
