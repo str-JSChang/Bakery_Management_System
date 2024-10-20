@@ -129,13 +129,18 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
             with open(order_file, 'r') as file:
                 lines = file.readlines()
 
-            customer_name, order_status, items_bought, total = None, None, [], 0.0
-            processing_order = False
             current_order = []
+            processing_order = False
+            customer_name = None
 
-            for line in lines:
+            for i, line in enumerate(lines):
                 line = line.strip()
 
+                # Find customer name before the order number
+                if 'Customer name:' in line:
+                    customer_name = line.split('Customer name: ')[1]
+
+                # Check for the specific order number and start processing the order
                 if f'Order Number: {order_number}' in line:
                     processing_order = True
                     current_order.append(line)
@@ -143,55 +148,32 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
 
                 if processing_order:
                     current_order.append(line)
-
-                    if line and 'Order Status' not in line and 'Order Number:' not in line:
-                        if customer_name is None:
-                            customer_name = line
-
-                    if 'Order Status:' in line:
-                        order_status = line.split(': ')[1].strip().lower()
-
-                    elif any(char.isdigit() for char in line) and 'Total' not in line:
-                        parts = line.split(',')
-                        if len(parts) >= 2:
-                            quantity_and_product = parts[0].strip()
-                            product_price = parts[1].strip()
-
-                            quantity = int(quantity_and_product.split()[0])
-                            product_name = quantity_and_product[len(str(quantity)):].strip()
-
-                            price = float(product_price.replace('RM', '').strip().split('x')[0])
-
-                            items_bought.append(f"{quantity} * {product_name} - RM{price * quantity:.2f}")
-
-                    elif 'Total:' in line:
-                        total = float(line.split('RM')[1].strip())
+                    if 'Total:' in line:  # Stop after processing the total
                         break
 
-            if processing_order:
-                if order_status in ['completed', 'order placed']:
-                    bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
-                    now = datetime.now()
-                    date_time = now.strftime("%Y-%m-%d %H:%M:%S")
+            if current_order:  # If the order was found
+                bill_id = ''.join(random.choices('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=8))
+                now = datetime.now()
+                date_time = now.strftime("%Y-%m-%d %H:%M:%S")
 
-                    print_receipt(customer_name, items_bought, total, bill_id, date_time)
-                    save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
-                    update_order_status(order_number, 'Completed', order_file)
-                    print(f"Order {order_number}'s status updated to 'Completed'.")
+                # Extract items bought and total amount
+                items_bought = [line for line in current_order if '*' in line]
+                total_line = next((line for line in current_order if 'Total:' in line), None)
+                total = float(total_line.split('RM')[1].strip()) if total_line else 0.0
 
-                    with open(completed_file, 'a') as completed:
-                        for order_line in current_order:
-                            completed.write(order_line + '\n')
+                # Print the receipt
+                print_receipt(customer_name, items_bought, total, bill_id, date_time)
+                save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
 
-                    with open(order_file, 'w') as file:
-                        for line in lines:
-                            if line.strip() not in current_order:
-                                file.write(line)
+                # Write to completed_order.txt
+                with open(completed_file, 'a') as completed:
+                    completed.write(f"Customer Name: {customer_name}\n")
+                    for order_line in current_order:
+                        completed.write(order_line + '\n')
+                    completed.write("\n")
 
-                elif order_status == 'cancelled':
-                    print(f"Order {order_number} is cancelled. Receipt cannot be printed.")
-                else:
-                    print(f"Order {order_number} status is '{order_status}'. Receipt cannot be printed.")
+                # Update order status to completed in order.txt
+                update_order_status(order_number, 'Completed', order_file)
 
         except FileNotFoundError:
             print(f"Error: '{order_file}' file not found.")
@@ -250,19 +232,17 @@ def generate_receipt(menu, order_file='order.txt', receipt_file='cus_recp.txt', 
         print_receipt(customer_name, items_bought, total, bill_id, date_time)
         save_recp_file(customer_name, items_bought, total, bill_id, date_time, receipt_file)
 
-        try:
-            with open(order_file, 'a') as file:
-                file.write(f"{customer_name}\n")
-                file.write(f"Order Number: {order_number}\n")
-                file.write(f"Order Status: Order placed\n")
-                for item in items_bought:
-                    file.write(f"{item}\n")
-                file.write(f"Total: RM{total:.2f}\n")
-                file.write("\n")
+        with open(order_file, 'a') as order:
+            order.write(f"Customer name: {customer_name}\n")
+            order.write(f"Order Number: {order_number}\n")
+            order.write(f"Order Status: Order placed\n")
+            for item in items_bought:
+                order.write(item + '\n')
+            order.write(f"Total: RM{total:.2f}\n\n")
 
-            print("Order placed successfully!")
-        except Exception as e:
-            print(f"An error occurred while saving the order: {e}")
+        print(f"Order placed successfully. Your order number is {order_number}.")
+    else:
+        print("Invalid choice.")
 
 def print_receipt(customer_name, items_bought, total, bill_id, date_time):
     print("\n----- Bakery Receipt -----")
@@ -300,19 +280,20 @@ def update_order_status(order_number, new_status, order_file='order.txt'):
         order_found = False
 
         for line in lines:
-            if f"\n\nOrder Number: {order_number}" in line:
+            if f'Order Number: {order_number}' in line:
                 order_found = True
                 updated_lines.append(line)
                 continue
 
             if order_found and 'Order Status:' in line:
                 updated_lines.append(f"Order Status: {new_status}\n")
-                order_found = False
+                order_found = False  
             else:
                 updated_lines.append(line)
 
         with open(order_file, 'w') as file:
             file.writelines(updated_lines)
+
     except FileNotFoundError:
         print(f"Error: '{order_file}' file not found.")
     except Exception as e:
