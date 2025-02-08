@@ -1,4 +1,4 @@
 ﻿Name,Email,Username,Password,Role,Staff_ID
-Jason Chang,jasonnchang55@gmail.com,jasonbakery,c105148efa15bcec86fe81fa9af914e8,manager,manager01
+Jason Chang,-,jasonbakery,-,manager,manager01
 testname,testemail@gmail.com,testusername,e16b2ab8d12314bf4efbd6203906ea6c,customer,
 teststaffname1,teststaffemail1@gmail.com,teststaffusername1,ccec5e1caf43a941623e91bd8dbbbfa0,teststaffrole1,teststaffid1
